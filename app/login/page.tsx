@@ -146,9 +146,7 @@ export default function LoginPage() {
           </form>
         </div>
 
-        <p className="text-center text-xs mt-5" style={{ color: "var(--text-3)" }}>
-          Default: <span style={{ color: "var(--text-2)" }}>admin@sms.local</span> / <span style={{ color: "var(--text-2)" }}>admin123</span>
-        </p>
+
       </div>
     </div>
   );
