@@ -25,6 +25,7 @@ model Settings {
   dailyLimit                Int      @default(200)
   appUrl                    String   @default("")
   timezone                  String   @default("UTC")
+  sendingMethods            Json     @default("{\"immediate\":true,\"batch\":true}")
   updatedAt                 DateTime @updatedAt
 }
 

@@ -179,6 +179,9 @@ CREATE UNIQUE INDEX "TwilioPhoneNumber_twilioSid_key" ON "TwilioPhoneNumber"("tw
 CREATE UNIQUE INDEX "Customer_phone_key" ON "Customer"("phone");
 CREATE UNIQUE INDEX "Message_twilioSid_key" ON "Message"("twilioSid");
 
+-- Add sendingMethods column to Settings
+ALTER TABLE "Settings" ADD COLUMN IF NOT EXISTS "sendingMethods" JSONB NOT NULL DEFAULT '{"immediate":true,"batch":true}';
+
 -- AddForeignKey
 ALTER TABLE "Conversation" ADD CONSTRAINT "Conversation_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE "Conversation" ADD CONSTRAINT "Conversation_phoneNumberId_fkey" FOREIGN KEY ("phoneNumberId") REFERENCES "TwilioPhoneNumber"("id") ON DELETE SET NULL ON UPDATE CASCADE;

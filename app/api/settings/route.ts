@@ -7,17 +7,17 @@ export async function GET() {
     update: {},
     create: { id: "singleton" },
   });
-  // Never expose auth token to client — mask it
+  const s = settings as typeof settings & { sendingMethods?: Record<string, boolean> | null };
   return NextResponse.json({
     ...settings,
     twilioAuthToken: settings.twilioAuthToken ? "••••••••••••••••••••••••••••••••" : "",
+    sendingMethods: s.sendingMethods ?? { immediate: true, batch: true },
   });
 }
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
 
-  // Don't overwrite auth token if the masked placeholder is sent back
   if (body.twilioAuthToken?.startsWith("•")) {
     delete body.twilioAuthToken;
   }
