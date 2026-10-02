@@ -31,7 +31,25 @@ echo "  SMS Management Deploy — sms.beegoo.app"
 echo "════════════════════════════════════════"
 echo ""
 
-read -rp "PostgreSQL password for 'postgres' user: " PG_PASS
+# ── Auto-detect PostgreSQL connection ──
+log "Detecting PostgreSQL setup..."
+
+# Try peer auth first (no password needed)
+if sudo -u postgres psql -c "\q" &>/dev/null; then
+  warn "Using peer authentication (no password needed)"
+  PG_PASS=""
+  DB_URL="postgresql://postgres@localhost:5432/${DB_NAME}"
+else
+  # Try to find password from existing app .env files
+  FOUND_PG=$(grep -r 'DATABASE_URL' /var/www/*/  --include=".env" -h 2>/dev/null | grep -oP '(?<=:)[^@]+(?=@)' | head -1 || true)
+  if [ -n "$FOUND_PG" ]; then
+    warn "Found existing PostgreSQL password from another app."
+    PG_PASS="$FOUND_PG"
+  else
+    read -rp "Could not auto-detect. Enter PostgreSQL password for 'postgres' user: " PG_PASS
+  fi
+  DB_URL="postgresql://postgres:${PG_PASS}@localhost:5432/${DB_NAME}"
+fi
 read -rp "Twilio Account SID (ACxxx...): " TWILIO_SID
 read -rp "Twilio Auth Token: " TWILIO_TOKEN
 read -rp "Twilio Messaging Service SID (MGxxx...): " TWILIO_MSG_SID
@@ -97,7 +115,7 @@ fi
 # ─────────────────────────────────────────────
 log "Writing .env..."
 cat > "$APP_DIR/.env" <<EOF
-DATABASE_URL="postgresql://postgres:${PG_PASS}@localhost:5432/${DB_NAME}"
+DATABASE_URL="${DB_URL}"
 TWILIO_ACCOUNT_SID=${TWILIO_SID}
 TWILIO_AUTH_TOKEN=${TWILIO_TOKEN}
 TWILIO_MESSAGING_SERVICE_SID=${TWILIO_MSG_SID}
