@@ -42,35 +42,52 @@ export default function LoginPage() {
   }
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
-      style={{ background: "var(--bg)" }}
-    >
-      {/* Animated background gradient */}
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Animated gradient background - Suno style */}
       <div 
-        className="absolute inset-0 opacity-30"
-        style={{
-          background: "radial-gradient(circle at 30% 20%, rgba(59, 130, 246, 0.3) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(99, 102, 241, 0.3) 0%, transparent 50%)",
+        className="absolute inset-0 gradient-bg-animated"
+        style={{ opacity: 0.15 }}
+      />
+
+      {/* Animated glowing orbs */}
+      <div 
+        className="glow-orb orb-1 w-96 h-96"
+        style={{ top: "-10%", left: "-5%" }}
+      />
+      <div 
+        className="glow-orb orb-2 w-80 h-80"
+        style={{ top: "60%", right: "-10%" }}
+      />
+      <div 
+        className="glow-orb orb-3 w-72 h-72"
+        style={{ bottom: "10%", left: "20%" }}
+      />
+
+      {/* Additional floating blobs */}
+      <div 
+        className="absolute w-64 h-64 rounded-full blur-3xl opacity-40"
+        style={{ 
+          background: "linear-gradient(135deg, #fa709a, #fee140)",
+          top: "30%",
+          right: "25%",
+          animation: "float 14s ease-in-out infinite"
+        }}
+      />
+      <div 
+        className="absolute w-56 h-56 rounded-full blur-3xl opacity-30"
+        style={{ 
+          background: "linear-gradient(135deg, #43e97b, #38f9d7)",
+          bottom: "30%",
+          left: "10%",
+          animation: "float 16s ease-in-out infinite reverse"
         }}
       />
 
-      {/* Floating orbs */}
+      {/* Mesh gradient overlay */}
       <div 
-        className="absolute w-64 h-64 rounded-full blur-3xl animate-pulse"
-        style={{ 
-          background: "linear-gradient(135deg, rgba(59, 130, 246, 0.4), rgba(99, 102, 241, 0.4))",
-          top: "10%",
-          left: "10%",
-          animation: "float 6s ease-in-out infinite"
-        }}
-      />
-      <div 
-        className="absolute w-48 h-48 rounded-full blur-3xl"
-        style={{ 
-          background: "linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(139, 92, 246, 0.3))",
-          bottom: "20%",
-          right: "15%",
-          animation: "float 8s ease-in-out infinite reverse"
+        className="absolute inset-0"
+        style={{
+          background: "radial-gradient(ellipse at top, transparent 0%, var(--bg) 70%)",
         }}
       />
 
@@ -85,24 +102,31 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div 
-            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-5 shadow-2xl"
+            className="relative inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-5 shadow-2xl"
             style={{ 
-              background: "linear-gradient(135deg, #3b82f6, #6366f1)",
-              boxShadow: "0 20px 40px -10px rgba(59, 130, 246, 0.5)"
+              background: "linear-gradient(135deg, #667eea, #764ba2)",
+              boxShadow: "0 25px 50px -12px rgba(102, 126, 234, 0.5)"
             }}
           >
             <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
             </svg>
+            {/* Subtle shine effect */}
+            <div 
+              className="absolute inset-0 rounded-2xl opacity-50"
+              style={{
+                background: "linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 50%)"
+              }}
+            />
           </div>
           <h1 
-            className="text-3xl font-bold tracking-tight mb-2"
+            className="text-4xl font-extrabold tracking-tight mb-2"
             style={{ color: "var(--text)" }}
           >
             SMS Dashboard
           </h1>
           <p 
-            className="text-sm"
+            className="text-base"
             style={{ color: "var(--text-2)" }}
           >
             Sign in to manage text messages
@@ -111,17 +135,17 @@ export default function LoginPage() {
 
         {/* Card */}
         <div 
-          className="relative p-8 rounded-3xl shadow-2xl"
+          className="relative p-8 rounded-3xl shadow-2xl backdrop-blur-xl"
           style={{ 
-            background: "var(--bg-card)",
+            background: "color-mix(in srgb, var(--bg-card) 95%, transparent)",
             border: "1px solid var(--border)",
             boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
           }}
         >
-          {/* Decorative gradient line at top */}
+          {/* Animated gradient line at top */}
           <div 
-            className="absolute top-0 left-8 right-8 h-1 rounded-b-full"
-            style={{ background: "linear-gradient(90deg, #3b82f6, #6366f1, #8b5cf6)" }}
+            className="absolute top-0 left-8 right-8 h-1 rounded-b-full gradient-bg-animated"
+            style={{ backgroundSize: "200% 200%" }}
           />
 
           {error && (
@@ -144,7 +168,7 @@ export default function LoginPage() {
             <div className="space-y-4">
               <div>
                 <label 
-                  className="block text-sm font-medium mb-2"
+                  className="block text-sm font-semibold mb-2"
                   style={{ color: "var(--text-2)" }}
                 >
                   Email address
@@ -177,7 +201,7 @@ export default function LoginPage() {
 
               <div>
                 <label 
-                  className="block text-sm font-medium mb-2"
+                  className="block text-sm font-semibold mb-2"
                   style={{ color: "var(--text-2)" }}
                 >
                   Password
@@ -228,15 +252,15 @@ export default function LoginPage() {
             <button 
               type="submit" 
               disabled={loading} 
-              className="relative w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-60 overflow-hidden group"
+              className="relative w-full flex items-center justify-center gap-2 py-4 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-60 overflow-hidden group"
               style={{ 
-                background: "linear-gradient(135deg, #3b82f6, #6366f1)",
-                boxShadow: "0 10px 30px -10px rgba(59, 130, 246, 0.5)"
+                background: "linear-gradient(135deg, #667eea, #764ba2)",
+                boxShadow: "0 15px 35px -10px rgba(102, 126, 234, 0.5)"
               }}
             >
               <span 
                 className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                style={{ background: "linear-gradient(135deg, #2563eb, #4f46e5)" }}
+                style={{ background: "linear-gradient(135deg, #764ba2, #f093fb)" }}
               />
               {loading ? (
                 <>
@@ -263,20 +287,21 @@ export default function LoginPage() {
             style={{ borderColor: "var(--border)" }}
           >
             <p className="text-xs" style={{ color: "var(--text-3)" }}>
-              Powered by{" "}
-              <span className="font-semibold" style={{ color: "var(--text-2)" }}>Beegoo</span>
+              Build by:{" "}
+              <span 
+                className="font-bold"
+                style={{ 
+                  background: "linear-gradient(135deg, #667eea, #764ba2)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent"
+                }}
+              >
+                MOJADOO
+              </span>
             </p>
           </div>
         </div>
       </div>
-
-      {/* Animation keyframes */}
-      <style jsx global>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-20px); }
-        }
-      `}</style>
     </div>
   );
 }
