@@ -4,13 +4,16 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 interface Customer { id: string; firstName: string; lastName: string; phone: string; }
+interface Group { id: string; name: string; memberCount: number; }
 interface ScheduleSlot { time: string; count: number; }
 interface SendingMethods { immediate: boolean; batch: boolean; }
 
 export default function CampaignForm() {
   const router = useRouter();
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
+  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
   const [adminDailyLimit, setAdminDailyLimit] = useState(200);
@@ -19,6 +22,7 @@ export default function CampaignForm() {
   const [schedules, setSchedules] = useState<ScheduleSlot[]>([{ time: "09:00", count: 50 }]);
   const [submitting, setSubmitting] = useState(false);
   const [search, setSearch] = useState("");
+  const [selectionMode, setSelectionMode] = useState<"individual" | "groups">("groups");
 
   useEffect(() => {
     fetch("/api/settings")
@@ -28,7 +32,6 @@ export default function CampaignForm() {
         if (d.dailyLimit) setAdminDailyLimit(d.dailyLimit);
         const methods: SendingMethods = d.sendingMethods ?? { immediate: true, batch: true };
         setSendingMethods(methods);
-        // Auto-select the only enabled method, or default to batch
         if (methods.batch) setSendMethod("batch");
         else if (methods.immediate) setSendMethod("immediate");
       });
@@ -36,7 +39,27 @@ export default function CampaignForm() {
     fetch("/api/customers?limit=500")
       .then((r) => r.json())
       .then((d) => setCustomers(d.customers ?? []));
+
+    fetch("/api/groups")
+      .then((r) => r.ok ? r.json() : [])
+      .then((d) => setGroups(d));
   }, []);
+
+  // Update selected customers when groups change
+  useEffect(() => {
+    if (selectionMode === "groups" && selectedGroups.length > 0) {
+      // Fetch member IDs for selected groups
+      Promise.all(
+        selectedGroups.map(gid => fetch(`/api/groups/${gid}`).then(r => r.ok ? r.json() : null))
+      ).then(results => {
+        const allCustomerIds = new Set<string>();
+        results.forEach(g => {
+          if (g?.members) g.members.forEach((m: Customer) => allCustomerIds.add(m.id));
+        });
+        setSelected(Array.from(allCustomerIds));
+      });
+    }
+  }, [selectedGroups, selectionMode]);
 
   const totalScheduled = schedules.reduce((s, slot) => s + slot.count, 0);
   const isOverLimit = totalScheduled > adminDailyLimit;
@@ -67,7 +90,7 @@ export default function CampaignForm() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!selected.length) return alert("Select at least one customer");
+    if (!selected.length) return alert("Select at least one recipient");
     if (!sendMethod) return alert("Select a sending method");
     if (sendMethod === "batch" && isOverLimit) return;
     setSubmitting(true);
@@ -170,38 +193,105 @@ export default function CampaignForm() {
           <h2 className="font-semibold" style={{ color: "var(--text)" }}>Recipients</h2>
           <span className="text-sm font-medium" style={{ color: "var(--accent)" }}>{selected.length} selected</span>
         </div>
-        <input
-          className="input mb-2"
-          placeholder="Search customers..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <div className="rounded-lg overflow-hidden" style={{ border: "1px solid var(--border)" }}>
-          <div className="px-3 py-2 flex gap-3" style={{ background: "var(--bg-subtle)", borderBottom: "1px solid var(--border)" }}>
-            <button type="button" className="text-xs font-medium" style={{ color: "var(--accent)" }} onClick={() => setSelected(customers.map((c) => c.id))}>
-              Select All ({customers.length})
-            </button>
-            <button type="button" className="text-xs" style={{ color: "var(--text-3)" }} onClick={() => setSelected([])}>Clear</button>
-          </div>
-          <div className="max-h-44 overflow-y-auto">
-            {filteredCustomers.map((c) => (
-              <label
-                key={c.id}
-                className="flex items-center gap-3 px-3 py-2 cursor-pointer text-sm"
-                style={{ borderBottom: "1px solid var(--border-soft)" }}
-              >
-                <input
-                  type="checkbox"
-                  className="rounded"
-                  checked={selected.includes(c.id)}
-                  onChange={(e) => setSelected(e.target.checked ? [...selected, c.id] : selected.filter((id) => id !== c.id))}
-                />
-                <span className="font-medium" style={{ color: "var(--text)" }}>{c.firstName} {c.lastName}</span>
-                <span className="text-xs ml-auto" style={{ color: "var(--text-3)" }}>{c.phone}</span>
-              </label>
-            ))}
-          </div>
+
+        {/* Mode Toggle */}
+        <div className="flex gap-2 mb-3">
+          <button
+            type="button"
+            onClick={() => { setSelectionMode("groups"); setSelected([]); }}
+            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${selectionMode === "groups" ? "" : ""}`}
+            style={{
+              background: selectionMode === "groups" ? "var(--accent)" : "var(--bg-subtle)",
+              color: selectionMode === "groups" ? "white" : "var(--text-2)",
+            }}
+          >
+            Select by Group
+          </button>
+          <button
+            type="button"
+            onClick={() => { setSelectionMode("individual"); setSelectedGroups([]); setSelected([]); }}
+            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all`}
+            style={{
+              background: selectionMode === "individual" ? "var(--accent)" : "var(--bg-subtle)",
+              color: selectionMode === "individual" ? "white" : "var(--text-2)",
+            }}
+          >
+            Individual Customers
+          </button>
         </div>
+
+        {/* Group Selection */}
+        {selectionMode === "groups" && groups.length > 0 && (
+          <div className="space-y-2 mb-3">
+            {groups.map(g => {
+              const isSelected = selectedGroups.includes(g.id);
+              return (
+                <label
+                  key={g.id}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all"
+                  style={{
+                    background: isSelected ? "var(--accent-soft)" : "var(--bg-subtle)",
+                    border: `2px solid ${isSelected ? "var(--accent)" : "transparent"}`,
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    className="rounded"
+                    checked={isSelected}
+                    onChange={(e) => setSelectedGroups(e.target.checked ? [...selectedGroups, g.id] : selectedGroups.filter(id => id !== g.id))}
+                  />
+                  <span className="font-medium text-sm" style={{ color: "var(--text)" }}>{g.name}</span>
+                  <span className="text-xs ml-auto" style={{ color: "var(--text-3)" }}>{g.memberCount} members</span>
+                </label>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Individual Selection */}
+        {selectionMode === "individual" && (
+          <>
+            <input
+              className="input mb-2"
+              placeholder="Search customers..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            <div className="rounded-lg overflow-hidden" style={{ border: "1px solid var(--border)" }}>
+              <div className="px-3 py-2 flex gap-3" style={{ background: "var(--bg-subtle)", borderBottom: "1px solid var(--border)" }}>
+                <button type="button" className="text-xs font-medium" style={{ color: "var(--accent)" }} onClick={() => setSelected(customers.map((c) => c.id))}>
+                  Select All ({customers.length})
+                </button>
+                <button type="button" className="text-xs" style={{ color: "var(--text-3)" }} onClick={() => setSelected([])}>Clear</button>
+              </div>
+              <div className="max-h-44 overflow-y-auto">
+                {filteredCustomers.map((c) => (
+                  <label
+                    key={c.id}
+                    className="flex items-center gap-3 px-3 py-2 cursor-pointer text-sm"
+                    style={{ borderBottom: "1px solid var(--border-soft)" }}
+                  >
+                    <input
+                      type="checkbox"
+                      className="rounded"
+                      checked={selected.includes(c.id)}
+                      onChange={(e) => setSelected(e.target.checked ? [...selected, c.id] : selected.filter((id) => id !== c.id))}
+                    />
+                    <span className="font-medium" style={{ color: "var(--text)" }}>{c.firstName} {c.lastName}</span>
+                    <span className="text-xs ml-auto" style={{ color: "var(--text-3)" }}>{c.phone}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        {selectionMode === "groups" && groups.length === 0 && (
+          <div className="text-center py-6 rounded-lg" style={{ background: "var(--bg-subtle)" }}>
+            <p className="text-sm mb-2" style={{ color: "var(--text-2)" }}>No groups created yet</p>
+            <a href="/dashboard/groups" className="text-sm font-medium" style={{ color: "var(--accent)" }}>Create a group →</a>
+          </div>
+        )}
       </div>
 
       {/* Sending Method */}

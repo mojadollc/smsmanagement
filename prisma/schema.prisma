@@ -58,6 +58,27 @@ model Customer {
   campaignRecipients CampaignRecipient[]
   smsQueue           SmsQueue[]
   optInRecords       OptInRecord[]
+  groupMembers       GroupMember[]
+}
+
+model Group {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  members     GroupMember[]
+}
+
+model GroupMember {
+  id         String   @id @default(cuid())
+  groupId    String
+  customerId String
+  addedAt    DateTime @default(now())
+  group      Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, customerId])
 }
 
 model Conversation {

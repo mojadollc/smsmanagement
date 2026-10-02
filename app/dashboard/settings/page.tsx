@@ -14,6 +14,13 @@ interface SettingsData {
   updatedAt?: string;
 }
 
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
 const DEFAULTS: SettingsData = {
   twilioAccountSid: "",
   twilioAuthToken: "",
@@ -71,13 +78,22 @@ export default function SettingsPage() {
   const [form, setForm] = useState<SettingsData>(DEFAULTS);
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [showToken, setShowToken] = useState(false);
-  const [activeTab, setActiveTab] = useState<"twilio" | "general" | "sending" | "webhooks">("twilio");
+  const [activeTab, setActiveTab] = useState<"profile" | "twilio" | "general" | "sending" | "webhooks">("profile");
   const [copied, setCopied] = useState<string | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profileForm, setProfileForm] = useState({ name: "", email: "", currentPassword: "", newPassword: "" });
+  const [profileStatus, setProfileStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   useEffect(() => {
     fetch("/api/settings").then((r) => r.ok ? r.json() : null).then((d) => {
       if (!d) return;
       setForm({ ...DEFAULTS, ...d, sendingMethods: d.sendingMethods ?? DEFAULTS.sendingMethods });
+    });
+    fetch("/api/auth/me").then((r) => r.ok ? r.json() : null).then((d) => {
+      if (d) {
+        setProfile(d);
+        setProfileForm({ name: d.name || "", email: d.email || "", currentPassword: "", newPassword: "" });
+      }
     });
   }, []);
 
@@ -97,6 +113,27 @@ export default function SettingsPage() {
     setTimeout(() => setStatus("idle"), 3000);
   }
 
+  async function saveProfile(e: React.FormEvent) {
+    e.preventDefault();
+    setProfileStatus("saving");
+    const res = await fetch("/api/user/update", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(profileForm),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setProfileStatus("saved");
+      if (data.user) {
+        setProfile(data.user);
+        setProfileForm(prev => ({ ...prev, currentPassword: "", newPassword: "" }));
+      }
+    } else {
+      setProfileStatus("error");
+    }
+    setTimeout(() => setProfileStatus("idle"), 3000);
+  }
+
   function copyUrl(text: string, key: string) {
     navigator.clipboard.writeText(text);
     setCopied(key);
@@ -107,6 +144,10 @@ export default function SettingsPage() {
   const noneEnabled = !form.sendingMethods?.immediate && !form.sendingMethods?.batch;
 
   const tabs = [
+    {
+      id: "profile" as const, label: "Profile",
+      icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>,
+    },
     {
       id: "twilio" as const, label: "Twilio",
       icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>,
@@ -157,6 +198,35 @@ export default function SettingsPage() {
 
         {/* Content */}
         <div className="flex-1 min-w-0">
+          {/* ── Profile ── */}
+          {activeTab === "profile" && profile && (
+            <form onSubmit={saveProfile} className="space-y-4">
+              <SectionCard title="Profile Settings" desc="Update your account information and password.">
+                <Field label="Name">
+                  <input className="input" value={profileForm.name} onChange={(e) => setProfileForm(prev => ({ ...prev, name: e.target.value }))} />
+                </Field>
+                <Field label="Email">
+                  <input type="email" className="input" value={profileForm.email} onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))} />
+                </Field>
+                <Field label="Role">
+                  <input className="input" value={profile.role === "admin" ? "Administrator" : "Agent"} disabled style={{ opacity: 0.6, cursor: "not-allowed" }} />
+                </Field>
+
+                <div style={{ borderTop: "1px solid var(--border)", paddingTop: "1rem", marginTop: "1rem" }}>
+                  <p className="font-medium mb-4" style={{ color: "var(--text)" }}>Change Password</p>
+                  <Field label="Current Password" hint="Required to change your password.">
+                    <input type="password" className="input" value={profileForm.currentPassword} onChange={(e) => setProfileForm(prev => ({ ...prev, currentPassword: e.target.value }))} placeholder="Enter current password" />
+                  </Field>
+                  <Field label="New Password" hint="Must be at least 8 characters.">
+                    <input type="password" className="input" value={profileForm.newPassword} onChange={(e) => setProfileForm(prev => ({ ...prev, newPassword: e.target.value }))} placeholder="Enter new password" />
+                  </Field>
+                </div>
+
+                <SaveBar status={profileStatus} disabled={profileStatus === "saving"} />
+              </SectionCard>
+            </form>
+          )}
+
           <form onSubmit={save} className="space-y-4">
 
             {/* ── Twilio ── */}
