@@ -139,40 +139,46 @@ export default function InboxView() {
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [hasNewMessage, setHasNewMessage] = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const prevUnreadRef = useRef<number>(0);
 
   async function load(silent = false) {
     const res = await fetch("/api/conversations?limit=50");
     const data = await res.json();
     const convos = data.conversations ?? [];
     
-    // Check for new messages
+    // Calculate total unread for notification
     const totalUnread = convos.reduce((acc: number, c: Conversation) => acc + c.unreadCount, 0);
-    if (!silent && totalUnread > prevUnreadRef.current && prevUnreadRef.current > 0) {
+    const prevTotal = conversations.reduce((acc, c) => acc + c.unreadCount, 0);
+    
+    if (!silent && totalUnread > prevTotal && prevTotal > 0) {
       setHasNewMessage(true);
       setTimeout(() => setHasNewMessage(false), 3000);
     }
-    prevUnreadRef.current = totalUnread;
     
-    setConversations(convos);
+    // Sort conversations by lastMessageAt (most recent first)
+    const sorted = [...convos].sort((a, b) => {
+      const dateA = new Date(a.lastMessageAt || a.customer?.phone).getTime();
+      const dateB = new Date(b.lastMessageAt || b.customer?.phone).getTime();
+      return dateB - dateA;
+    });
     
-    // Update selected conversation if open
+    setConversations(sorted);
+    
+    // If selected conversation exists, update it with new messages
     if (selected) {
-      const updated = convos.find((c: Conversation) => c.id === selected.id);
-      if (updated && updated.messages?.length !== selected.messages?.length) {
+      const updatedSelected = sorted.find(c => c.id === selected.id);
+      if (updatedSelected) {
         const res = await fetch(`/api/conversations/${selected.id}`);
-        const data = await res.json();
-        setSelected(data);
+        const fullData = await res.json();
+        setSelected(fullData);
       }
     }
   }
 
   useEffect(() => { 
     load(); 
-    // Poll every 5 seconds for new messages
-    const interval = setInterval(() => load(true), 5000);
+    // Poll every 3 seconds for new messages
+    const interval = setInterval(() => load(true), 3000);
     return () => clearInterval(interval);
   }, []);
 
@@ -189,23 +195,48 @@ export default function InboxView() {
     setConversations((prev) =>
       prev.map((c) => (c.id === conv.id ? { ...c, unreadCount: 0 } : c))
     );
+    // Move conversation to top of list
+    setConversations((prev) => {
+      const filtered = prev.filter(c => c.id !== conv.id);
+      return [{ ...conv, unreadCount: 0 }, ...filtered];
+    });
   }
 
   async function sendReply() {
     if (!reply.trim() || !selected) return;
     setSending(true);
+    
     const res = await fetch(`/api/conversations/${selected.id}/reply`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message: reply }),
     });
+    
     if (res.ok) {
-      const msg = await res.json();
+      const newMsg = await res.json();
+      
+      // Add message to current conversation
       setSelected((prev) =>
-        prev ? { ...prev, messages: [...prev.messages, msg] } : prev
+        prev ? { 
+          ...prev, 
+          messages: [...prev.messages, newMsg],
+          lastMessageAt: new Date().toISOString()
+        } : prev
       );
+      
+      // Update conversation in list (move to top)
+      setConversations((prev) => {
+        const filtered = prev.filter(c => c.id !== selected.id);
+        const updated = {
+          ...prev.find(c => c.id === selected.id)!,
+          lastMessageAt: new Date().toISOString(),
+          unreadCount: 0,
+          messages: [newMsg]
+        };
+        return [updated, ...filtered];
+      });
+      
       setReply("");
-      load(true);
     }
     setSending(false);
   }
@@ -337,7 +368,7 @@ export default function InboxView() {
                           className="text-xs shrink-0 ml-2"
                           style={{ color: "var(--text-3)" }}
                         >
-                          {lastMsg ? formatTime(lastMsg.createdAt) : ""}
+                          {conv.lastMessageAt ? formatTime(conv.lastMessageAt) : ""}
                         </span>
                       </div>
                       
@@ -404,9 +435,10 @@ export default function InboxView() {
                   <p style={{ color: "var(--text-3)" }}>No messages yet</p>
                 </div>
               ) : (
-                [...selected.messages].reverse().map((msg, idx, arr) => {
+                // Messages are already sorted by createdAt: "asc" from API (oldest first)
+                selected.messages.map((msg, idx) => {
                   const isOutbound = msg.direction === "outbound";
-                  const showAvatar = idx === 0 || arr[idx - 1].direction !== msg.direction;
+                  const showAvatar = idx === 0 || selected.messages[idx - 1].direction !== msg.direction;
                   
                   return (
                     <div 

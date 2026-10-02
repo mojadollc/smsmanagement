@@ -1,6 +1,6 @@
 import { processDueJobs } from "../lib/queue";
 
-const INTERVAL_MS = 60_000; // run every minute
+const INTERVAL_MS = 10_000; // run every 10 seconds for faster processing
 
 async function run() {
   console.log("[sms-worker] starting");

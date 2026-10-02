@@ -12,7 +12,17 @@ export async function GET(req: NextRequest) {
       take: limit,
       include: {
         customer: true,
-        messages: { orderBy: { createdAt: "desc" }, take: 1 },
+        messages: { 
+          orderBy: { createdAt: "desc" }, 
+          take: 1,
+          select: {
+            id: true,
+            body: true,
+            createdAt: true,
+            direction: true,
+            status: true
+          }
+        },
       },
       orderBy: { lastMessageAt: "desc" },
     }),
