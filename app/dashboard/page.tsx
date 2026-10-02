@@ -41,8 +41,8 @@ const statusColors: Record<string, { bg: string; text: string }> = {
 
 export default async function DashboardPage() {
   const stats = await getStats();
-  const settingsData = await prisma.settings.findUnique({ where: { id: "singleton" } }).catch(() => null);
-  const dailyLimit = settingsData?.dailyLimit ?? 200;
+  const settingsRows = await prisma.$queryRaw<{ dailyLimit: number }[]>`SELECT "dailyLimit" FROM "Settings" WHERE id = 'singleton' LIMIT 1`.catch(() => []);
+  const dailyLimit = settingsRows[0]?.dailyLimit ?? 200;
 
   if (!stats) {
     return (
