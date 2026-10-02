@@ -107,16 +107,13 @@ export default function CustomerList() {
   async function importCSV() {
     if (!csvRows.length) return;
     setImporting(true);
-    let imported = 0, skipped = 0;
-    for (const row of csvRows) {
-      const res = await fetch("/api/customers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(row),
-      });
-      if (res.ok) imported++; else skipped++;
-    }
-    setImportResult({ imported, skipped });
+    const res = await fetch("/api/customers", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(csvRows),
+    });
+    const result = await res.json();
+    setImportResult({ imported: result.imported ?? 0, skipped: result.skipped ?? 0 });
     setCsvRows([]);
     setImporting(false);
     load();

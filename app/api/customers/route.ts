@@ -33,8 +33,24 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { firstName, lastName, phone, email } = body;
 
+  // Bulk import
+  if (Array.isArray(body)) {
+    const results = await Promise.allSettled(
+      body.map((row: { firstName: string; lastName: string; phone: string; email?: string }) =>
+        prisma.customer.upsert({
+          where: { phone: row.phone },
+          update: {},
+          create: { firstName: row.firstName || "Unknown", lastName: row.lastName || row.phone, phone: row.phone, email: row.email || null },
+        })
+      )
+    );
+    const imported = results.filter((r) => r.status === "fulfilled").length;
+    const skipped = results.filter((r) => r.status === "rejected").length;
+    return NextResponse.json({ imported, skipped });
+  }
+
+  const { firstName, lastName, phone, email } = body;
   if (!firstName || !lastName || !phone) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
