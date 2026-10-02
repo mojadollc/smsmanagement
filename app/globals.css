@@ -1,41 +1,7 @@
 @import "tailwindcss";
 
-/* ── Uber Move Font Face ───────────────────────────────────── */
-@font-face {
-  font-family: 'Uber Move';
-  src: url('https://fonts.gstatic.com/s/ubermove/v3/X9OM6pA7db5EUh5seJfbnrLF2Xw.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Uber Move';
-  src: url('https://fonts.gstatic.com/s/ubermove/v3/X9OH6pA7db5EUh5seJfbnrLF9aR3iQ.woff2') format('woff2');
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Uber Move';
-  src: url('https://fonts.gstatic.com/s/ubermove/v3/X9OH6pA7db5EUh5seJfbnrLF-ZaR3iQ.woff2') format('woff2');
-  font-weight: 600;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Uber Move';
-  src: url('https://fonts.gstatic.com/s/ubermove/v3/X9OH6pA7db5EUh5seJfbnrLFj6aR3iQ.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Uber Move';
-  src: url('https://fonts.gstatic.com/s/ubermove/v3/X9OH6pA7db5EUh5seJfbnrLFiqZRA2yIJA.woff2') format('woff2');
-  font-weight: 800;
-  font-style: normal;
-  font-display: swap;
-}
+/* ── Uber Move Font Family ─────────────────────────────────── */
+/* Uses Google Fonts API for proper Uber Move rendering */
 
 /* ── Theme tokens ─────────────────────────────────────────── */
 :root {
@@ -61,25 +27,25 @@
 }
 
 .dark {
-  --bg:          #0f172a;
-  --bg-card:     #1e293b;
-  --bg-subtle:   #0f172a;
-  --bg-hover:    #334155;
-  --border:      #334155;
-  --border-soft: #1e293b;
-  --text:        #f1f5f9;
-  --text-2:      #94a3b8;
-  --text-3:      #475569;
-  --accent:      #3b82f6;
-  --accent-hover:#60a5fa;
+  --bg:          #0a0f1a;
+  --bg-card:     #1a2234;
+  --bg-subtle:   #121a2a;
+  --bg-hover:    #2a3548;
+  --border:      #2a3548;
+  --border-soft: #1f2937;
+  --text:        #f8fafc;
+  --text-2:      #cbd5e1;
+  --text-3:      #7c8aa1;
+  --accent:      #60a5fa;
+  --accent-hover:#93c5fd;
   --accent-soft: #1e3a5f;
   --accent-text: #93c5fd;
-  --sidebar-bg:  #020617;
-  --sidebar-border: #0f172a;
-  --sidebar-text: #64748b;
+  --sidebar-bg:  #030712;
+  --sidebar-border: #1f2937;
+  --sidebar-text: #9ca3af;
   --sidebar-text-active: #ffffff;
-  --sidebar-active: #1d4ed8;
-  --sidebar-hover: #0f172a;
+  --sidebar-active: #2563eb;
+  --sidebar-hover: #111827;
 }
 
 /* ── Base with Uber Move ───────────────────────────────────── */
@@ -97,6 +63,7 @@ body {
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Uber Move', system-ui, sans-serif;
   font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 /* ── Utility classes ──────────────────────────────────────── */
@@ -113,7 +80,7 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 0.5rem;
   padding: 0.625rem 0.875rem;
   font-size: 0.875rem;
-  font-family: inherit;
+  font-family: 'Uber Move', system-ui, sans-serif;
   color: var(--text);
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
@@ -131,7 +98,7 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 0.5rem;
   padding: 0.625rem 1.25rem;
   font-size: 0.875rem;
-  font-family: inherit;
+  font-family: 'Uber Move', system-ui, sans-serif;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s, opacity 0.15s;
@@ -146,7 +113,7 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 0.5rem;
   padding: 0.625rem 1.25rem;
   font-size: 0.875rem;
-  font-family: inherit;
+  font-family: 'Uber Move', system-ui, sans-serif;
   font-weight: 500;
   cursor: pointer;
   transition: background 0.15s;

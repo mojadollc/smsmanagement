@@ -62,11 +62,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Uber Move Font */}
+        {/* Uber Move Font - Display */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link 
-          href="https://fonts.googleapis.com/css2?family=Uber+Move:wght@400;500;600;700;800&family=Uber+Move+Text:wght@400;500;600&display=swap" 
+          href="https://fonts.googleapis.com/css2?family=Uber+Move:wght@400;500;600;700;800&display=swap" 
           rel="stylesheet" 
         />
         {/* No-flash theme script — runs before paint */}
@@ -100,7 +100,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
       </head>
-      <body className="antialiased" style={{ fontFamily: "'Uber Move Text', system-ui, sans-serif" }}>
+      <body className="antialiased" style={{ fontFamily: "'Uber Move', system-ui, sans-serif" }}>
         {children}
       </body>
     </html>

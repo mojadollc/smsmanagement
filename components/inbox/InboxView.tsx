@@ -53,70 +53,14 @@ function getRandomColor(phone: string) {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const config: Record<string, { bg: string; color: string; icon: React.ReactNode }> = {
-    delivered: {
-      bg: "rgba(34, 197, 94, 0.15)",
-      color: "#16a34a",
-      icon: (
-        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-        </svg>
-      ),
-    },
-    sent: {
-      bg: "rgba(59, 130, 246, 0.15)",
-      color: "#2563eb",
-      icon: (
-        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-        </svg>
-      ),
-    },
-    pending: {
-      bg: "rgba(234, 179, 8, 0.15)",
-      color: "#ca8a04",
-      icon: (
-        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-    },
-    failed: {
-      bg: "rgba(239, 68, 68, 0.15)",
-      color: "#dc2626",
-      icon: (
-        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-    },
-    queued: {
-      bg: "rgba(156, 163, 175, 0.15)",
-      color: "#6b7280",
-      icon: (
-        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-        </svg>
-      ),
-    },
-    undelivered: {
-      bg: "rgba(239, 68, 68, 0.15)",
-      color: "#dc2626",
-      icon: (
-        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-        </svg>
-      ),
-    },
-    read: {
-      bg: "rgba(34, 197, 94, 0.15)",
-      color: "#16a34a",
-      icon: (
-        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-        </svg>
-      ),
-    },
+  const config: Record<string, { bg: string; color: string }> = {
+    delivered: { bg: "rgba(34, 197, 94, 0.15)", color: "#16a34a" },
+    sent: { bg: "rgba(59, 130, 246, 0.15)", color: "#2563eb" },
+    pending: { bg: "rgba(234, 179, 8, 0.15)", color: "#ca8a04" },
+    failed: { bg: "rgba(239, 68, 68, 0.15)", color: "#dc2626" },
+    queued: { bg: "rgba(156, 163, 175, 0.15)", color: "#6b7280" },
+    undelivered: { bg: "rgba(239, 68, 68, 0.15)", color: "#dc2626" },
+    read: { bg: "rgba(34, 197, 94, 0.15)", color: "#16a34a" },
   };
 
   const conf = config[status] || config.pending;
@@ -126,7 +70,6 @@ function StatusBadge({ status }: { status: string }) {
       className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium"
       style={{ background: conf.bg, color: conf.color }}
     >
-      {conf.icon}
       {status}
     </span>
   );
@@ -146,7 +89,6 @@ export default function InboxView() {
     const data = await res.json();
     const convos = data.conversations ?? [];
     
-    // Calculate total unread for notification
     const totalUnread = convos.reduce((acc: number, c: Conversation) => acc + c.unreadCount, 0);
     const prevTotal = conversations.reduce((acc, c) => acc + c.unreadCount, 0);
     
@@ -157,8 +99,8 @@ export default function InboxView() {
     
     // Sort conversations by lastMessageAt (most recent first)
     const sorted = [...convos].sort((a, b) => {
-      const dateA = new Date(a.lastMessageAt || a.customer?.phone).getTime();
-      const dateB = new Date(b.lastMessageAt || b.customer?.phone).getTime();
+      const dateA = new Date(a.lastMessageAt || 0).getTime();
+      const dateB = new Date(b.lastMessageAt || 0).getTime();
       return dateB - dateA;
     });
     
@@ -177,7 +119,6 @@ export default function InboxView() {
 
   useEffect(() => { 
     load(); 
-    // Poll every 3 seconds for new messages
     const interval = setInterval(() => load(true), 3000);
     return () => clearInterval(interval);
   }, []);
@@ -192,13 +133,11 @@ export default function InboxView() {
     const res = await fetch(`/api/conversations/${conv.id}`);
     const data = await res.json();
     setSelected(data);
-    setConversations((prev) =>
-      prev.map((c) => (c.id === conv.id ? { ...c, unreadCount: 0 } : c))
-    );
-    // Move conversation to top of list
+    
+    // Move conversation to top and reset unread
     setConversations((prev) => {
       const filtered = prev.filter(c => c.id !== conv.id);
-      return [{ ...conv, unreadCount: 0 }, ...filtered];
+      return [{ ...conv, unreadCount: 0, lastMessageAt: data.lastMessageAt || conv.lastMessageAt }, ...filtered];
     });
   }
 
@@ -214,26 +153,23 @@ export default function InboxView() {
     
     if (res.ok) {
       const newMsg = await res.json();
+      const now = new Date().toISOString();
       
       // Add message to current conversation
       setSelected((prev) =>
         prev ? { 
           ...prev, 
           messages: [...prev.messages, newMsg],
-          lastMessageAt: new Date().toISOString()
+          lastMessageAt: now
         } : prev
       );
       
       // Update conversation in list (move to top)
       setConversations((prev) => {
+        const existing = prev.find(c => c.id === selected.id);
+        if (!existing) return prev;
         const filtered = prev.filter(c => c.id !== selected.id);
-        const updated = {
-          ...prev.find(c => c.id === selected.id)!,
-          lastMessageAt: new Date().toISOString(),
-          unreadCount: 0,
-          messages: [newMsg]
-        };
-        return [updated, ...filtered];
+        return [{ ...existing, lastMessageAt: now, unreadCount: 0 }, ...filtered];
       });
       
       setReply("");
@@ -254,43 +190,25 @@ export default function InboxView() {
       className="flex h-[calc(100vh-8rem)] rounded-2xl overflow-hidden shadow-2xl"
       style={{ background: "var(--bg-card)" }}
     >
-      {/* Sidebar - Conversation List */}
+      {/* Sidebar */}
       <div 
         className="w-80 flex flex-col border-r"
         style={{ borderColor: "var(--border)", background: "var(--bg)" }}
       >
-        {/* Header */}
         <div className="p-4 border-b" style={{ borderColor: "var(--border)" }}>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-bold" style={{ color: "var(--text)" }}>
-              Messages
-            </h2>
+            <h2 className="text-lg font-bold" style={{ color: "var(--text)" }}>Messages</h2>
             <div className="flex items-center gap-2">
               {hasNewMessage && (
-                <span 
-                  className="px-2 py-1 rounded-full text-xs font-bold text-white animate-pulse"
-                  style={{ background: "#dc2626" }}
-                >
-                  New!
-                </span>
+                <span className="px-2 py-1 rounded-full text-xs font-bold text-white animate-pulse" style={{ background: "#dc2626" }}>New!</span>
               )}
               {totalUnread > 0 && (
-                <span 
-                  className="px-2.5 py-1 rounded-full text-xs font-bold text-white"
-                  style={{ background: "linear-gradient(135deg, #ef4444, #dc2626)" }}
-                >
-                  {totalUnread}
-                </span>
+                <span className="px-2.5 py-1 rounded-full text-xs font-bold text-white" style={{ background: "linear-gradient(135deg, #ef4444, #dc2626)" }}>{totalUnread}</span>
               )}
             </div>
           </div>
-          {/* Search */}
           <div className="relative">
-            <svg 
-              className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" 
-              style={{ color: "var(--text-3)" }}
-              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-            >
+            <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--text-3)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input
@@ -299,23 +217,15 @@ export default function InboxView() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm transition-all focus:outline-none"
-              style={{ 
-                background: "var(--bg-subtle)", 
-                border: "1px solid var(--border)",
-                color: "var(--text)"
-              }}
+              style={{ background: "var(--bg-subtle)", border: "1px solid var(--border)", color: "var(--text)" }}
             />
           </div>
         </div>
 
-        {/* Conversations */}
         <div className="flex-1 overflow-y-auto">
           {filteredConversations.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full p-6 text-center">
-              <div 
-                className="w-16 h-16 rounded-full flex items-center justify-center mb-3"
-                style={{ background: "var(--bg-subtle)" }}
-              >
+              <div className="w-16 h-16 rounded-full flex items-center justify-center mb-3" style={{ background: "var(--bg-subtle)" }}>
                 <svg className="w-8 h-8" style={{ color: "var(--text-3)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
@@ -341,16 +251,12 @@ export default function InboxView() {
                   }}
                 >
                   <div className="flex items-start gap-3">
-                    {/* Avatar */}
                     <div className="relative">
                       <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold text-sm shrink-0 bg-gradient-to-br ${colorClass}`}>
                         {initials}
                       </div>
                       {conv.unreadCount > 0 && (
-                        <span 
-                          className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white"
-                          style={{ background: "#dc2626" }}
-                        >
+                        <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: "#dc2626" }}>
                           {conv.unreadCount}
                         </span>
                       )}
@@ -358,24 +264,14 @@ export default function InboxView() {
                     
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-0.5">
-                        <span 
-                          className="font-semibold text-sm truncate"
-                          style={{ color: isActive ? "var(--accent-text)" : "var(--text)" }}
-                        >
+                        <span className="font-semibold text-sm truncate" style={{ color: isActive ? "var(--accent-text)" : "var(--text)" }}>
                           {conv.customer.firstName} {conv.customer.lastName}
                         </span>
-                        <span 
-                          className="text-xs shrink-0 ml-2"
-                          style={{ color: "var(--text-3)" }}
-                        >
+                        <span className="text-xs shrink-0 ml-2" style={{ color: "var(--text-3)" }}>
                           {conv.lastMessageAt ? formatTime(conv.lastMessageAt) : ""}
                         </span>
                       </div>
-                      
-                      <p 
-                        className="text-sm truncate"
-                        style={{ color: "var(--text-2)" }}
-                      >
+                      <p className="text-sm truncate" style={{ color: "var(--text-2)" }}>
                         {lastMsg?.body || "No messages yet"}
                       </p>
                     </div>
@@ -392,16 +288,8 @@ export default function InboxView() {
         {selected ? (
           <>
             {/* Chat Header */}
-            <div 
-              className="px-6 py-4 border-b flex items-center gap-4"
-              style={{ 
-                borderColor: "var(--border)",
-                background: "var(--bg-card)"
-              }}
-            >
-              <div 
-                className={`w-11 h-11 rounded-full flex items-center justify-center text-white font-semibold text-sm bg-gradient-to-br ${getRandomColor(selected.customer.phone)}`}
-              >
+            <div className="px-6 py-4 border-b flex items-center gap-4" style={{ borderColor: "var(--border)", background: "var(--bg-card)" }}>
+              <div className={`w-11 h-11 rounded-full flex items-center justify-center text-white font-semibold text-sm bg-gradient-to-br ${getRandomColor(selected.customer.phone)}`}>
                 {getInitials(selected.customer.firstName, selected.customer.lastName)}
               </div>
               <div className="flex-1 min-w-0">
@@ -415,83 +303,45 @@ export default function InboxView() {
                   {selected.customer.phone}
                 </p>
               </div>
-              
-              {/* Status indicator */}
-              <div 
-                className="px-3 py-1.5 rounded-full text-xs font-medium"
-                style={{ background: "rgba(34, 197, 94, 0.1)", color: "#16a34a" }}
-              >
-                Active
-              </div>
+              <div className="px-3 py-1.5 rounded-full text-xs font-medium" style={{ background: "rgba(34, 197, 94, 0.1)", color: "#16a34a" }}>Active</div>
             </div>
 
             {/* Messages */}
-            <div 
-              className="flex-1 overflow-y-auto px-6 py-4 space-y-4"
-              style={{ background: "var(--bg)" }}
-            >
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4" style={{ background: "var(--bg)" }}>
               {selected.messages.length === 0 ? (
                 <div className="flex items-center justify-center h-full">
                   <p style={{ color: "var(--text-3)" }}>No messages yet</p>
                 </div>
               ) : (
-                // Messages are already sorted by createdAt: "asc" from API (oldest first)
                 selected.messages.map((msg, idx) => {
                   const isOutbound = msg.direction === "outbound";
                   const showAvatar = idx === 0 || selected.messages[idx - 1].direction !== msg.direction;
                   
                   return (
-                    <div 
-                      key={msg.id}
-                      className={`flex items-end gap-2 ${isOutbound ? "justify-end" : "justify-start"}`}
-                    >
-                      {/* Avatar for inbound */}
+                    <div key={msg.id} className={`flex items-end gap-2 ${isOutbound ? "justify-end" : "justify-start"}`}>
                       {!isOutbound && showAvatar && (
-                        <div 
-                          className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-xs bg-gradient-to-br ${getRandomColor(selected.customer.phone)} shrink-0`}
-                        >
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-xs bg-gradient-to-br ${getRandomColor(selected.customer.phone)} shrink-0`}>
                           {getInitials(selected.customer.firstName, selected.customer.lastName)}
                         </div>
                       )}
                       {!isOutbound && !showAvatar && <div className="w-8" />}
                       
-                      {/* Message bubble */}
                       <div className="max-w-md">
-                        <div 
-                          className={`px-4 py-2.5 ${
-                            isOutbound 
-                              ? "rounded-2xl rounded-br-md" 
-                              : "rounded-2xl rounded-bl-md"
-                          }`}
+                        <div
+                          className={`px-4 py-2.5 ${isOutbound ? "rounded-2xl rounded-br-md" : "rounded-2xl rounded-bl-md"}`}
                           style={{
-                            background: isOutbound 
-                              ? "linear-gradient(135deg, #3b82f6, #6366f1)" 
-                              : "var(--bg-card)",
+                            background: isOutbound ? "linear-gradient(135deg, #3b82f6, #6366f1)" : "var(--bg-card)",
                             boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
                           }}
                         >
-                          <p 
-                            className="text-sm leading-relaxed"
-                            style={{ color: isOutbound ? "white" : "var(--text)" }}
-                          >
-                            {msg.body}
-                          </p>
+                          <p className="text-sm leading-relaxed" style={{ color: isOutbound ? "white" : "var(--text)" }}>{msg.body}</p>
                         </div>
-                        <div 
-                          className="flex items-center gap-2 mt-1 px-1"
-                          style={{ justifyContent: isOutbound ? "flex-end" : "flex-start" }}
-                        >
-                          <span 
-                            className="text-xs"
-                            style={{ color: "var(--text-3)" }}
-                          >
-                            {formatTime(msg.createdAt)}
-                          </span>
+                        <div className="flex items-center gap-2 mt-1 px-1" style={{ justifyContent: isOutbound ? "flex-end" : "flex-start" }}>
+                          <span className="text-xs" style={{ color: "var(--text-3)" }}>{formatTime(msg.createdAt)}</span>
                           {isOutbound && <StatusBadge status={msg.status} />}
                         </div>
                       </div>
                       
-                      {/* Avatar for outbound */}
                       {isOutbound && showAvatar && (
                         <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: "linear-gradient(135deg, #3b82f6, #6366f1)" }}>
                           <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -508,14 +358,8 @@ export default function InboxView() {
             </div>
 
             {/* Reply Input */}
-            <div 
-              className="px-6 py-4 border-t"
-              style={{ borderColor: "var(--border)", background: "var(--bg-card)" }}
-            >
-              <div 
-                className="flex items-end gap-3 p-2 rounded-2xl"
-                style={{ background: "var(--bg-subtle)" }}
-              >
+            <div className="px-6 py-4 border-t" style={{ borderColor: "var(--border)", background: "var(--bg-card)" }}>
+              <div className="flex items-end gap-3 p-2 rounded-2xl" style={{ background: "var(--bg-subtle)" }}>
                 <textarea
                   value={reply}
                   onChange={(e) => setReply(e.target.value)}
@@ -528,11 +372,7 @@ export default function InboxView() {
                   placeholder="Type a message..."
                   rows={1}
                   className="flex-1 px-4 py-2.5 text-sm resize-none focus:outline-none"
-                  style={{ 
-                    background: "transparent",
-                    color: "var(--text)",
-                    maxHeight: "120px"
-                  }}
+                  style={{ background: "transparent", color: "var(--text)", maxHeight: "120px" }}
                 />
                 <button
                   onClick={sendReply}
@@ -555,22 +395,14 @@ export default function InboxView() {
             </div>
           </>
         ) : (
-          /* Empty State */
           <div className="flex-1 flex flex-col items-center justify-center p-8">
-            <div 
-              className="w-24 h-24 rounded-full flex items-center justify-center mb-6"
-              style={{ background: "var(--bg-subtle)" }}
-            >
+            <div className="w-24 h-24 rounded-full flex items-center justify-center mb-6" style={{ background: "var(--bg-subtle)" }}>
               <svg className="w-12 h-12" style={{ color: "var(--text-3)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold mb-2" style={{ color: "var(--text)" }}>
-              Select a conversation
-            </h3>
-            <p className="text-sm text-center max-w-sm" style={{ color: "var(--text-3)" }}>
-              Choose a conversation from the sidebar to start messaging with your customers
-            </p>
+            <h3 className="text-xl font-semibold mb-2" style={{ color: "var(--text)" }}>Select a conversation</h3>
+            <p className="text-sm text-center max-w-sm" style={{ color: "var(--text-3)" }}>Choose a conversation from the sidebar to start messaging</p>
           </div>
         )}
       </div>

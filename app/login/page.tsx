@@ -43,51 +43,55 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Animated gradient background - Suno style */}
+      {/* Full-screen animated gradient background - Suno style */}
+      <div className="absolute inset-0 gradient-bg-animated" />
+      
+      {/* Dark overlay for readability */}
       <div 
-        className="absolute inset-0 gradient-bg-animated"
-        style={{ opacity: 0.15 }}
+        className="absolute inset-0"
+        style={{ background: "rgba(0, 0, 0, 0.4)" }}
       />
 
       {/* Animated glowing orbs */}
       <div 
-        className="glow-orb orb-1 w-96 h-96"
-        style={{ top: "-10%", left: "-5%" }}
+        className="glow-orb orb-1 w-[500px] h-[500px]"
+        style={{ top: "-15%", left: "-10%" }}
       />
       <div 
-        className="glow-orb orb-2 w-80 h-80"
-        style={{ top: "60%", right: "-10%" }}
+        className="glow-orb orb-2 w-[400px] h-[400px]"
+        style={{ top: "50%", right: "-5%" }}
       />
       <div 
-        className="glow-orb orb-3 w-72 h-72"
-        style={{ bottom: "10%", left: "20%" }}
+        className="glow-orb orb-3 w-[350px] h-[350px]"
+        style={{ bottom: "5%", left: "15%" }}
       />
 
       {/* Additional floating blobs */}
       <div 
-        className="absolute w-64 h-64 rounded-full blur-3xl opacity-40"
+        className="absolute w-[300px] h-[300px] rounded-full blur-3xl opacity-50"
         style={{ 
           background: "linear-gradient(135deg, #fa709a, #fee140)",
-          top: "30%",
-          right: "25%",
+          top: "25%",
+          right: "20%",
           animation: "float 14s ease-in-out infinite"
         }}
       />
       <div 
-        className="absolute w-56 h-56 rounded-full blur-3xl opacity-30"
+        className="absolute w-[250px] h-[250px] rounded-full blur-3xl opacity-40"
         style={{ 
           background: "linear-gradient(135deg, #43e97b, #38f9d7)",
-          bottom: "30%",
-          left: "10%",
+          bottom: "25%",
+          left: "5%",
           animation: "float 16s ease-in-out infinite reverse"
         }}
       />
-
-      {/* Mesh gradient overlay */}
       <div 
-        className="absolute inset-0"
-        style={{
-          background: "radial-gradient(ellipse at top, transparent 0%, var(--bg) 70%)",
+        className="absolute w-[200px] h-[200px] rounded-full blur-3xl opacity-45"
+        style={{ 
+          background: "linear-gradient(135deg, #667eea, #764ba2)",
+          top: "60%",
+          left: "60%",
+          animation: "float 12s ease-in-out infinite"
         }}
       />
 
@@ -111,24 +115,15 @@ export default function LoginPage() {
             <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
             </svg>
-            {/* Subtle shine effect */}
             <div 
               className="absolute inset-0 rounded-2xl opacity-50"
-              style={{
-                background: "linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 50%)"
-              }}
+              style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 50%)" }}
             />
           </div>
-          <h1 
-            className="text-4xl font-extrabold tracking-tight mb-2"
-            style={{ color: "var(--text)" }}
-          >
+          <h1 className="text-4xl font-extrabold tracking-tight mb-2 text-white drop-shadow-lg">
             SMS Dashboard
           </h1>
-          <p 
-            className="text-base"
-            style={{ color: "var(--text-2)" }}
-          >
+          <p className="text-base text-white/80">
             Sign in to manage text messages
           </p>
         </div>
@@ -137,8 +132,8 @@ export default function LoginPage() {
         <div 
           className="relative p-8 rounded-3xl shadow-2xl backdrop-blur-xl"
           style={{ 
-            background: "color-mix(in srgb, var(--bg-card) 95%, transparent)",
-            border: "1px solid var(--border)",
+            background: "rgba(255, 255, 255, 0.95)",
+            border: "1px solid rgba(255, 255, 255, 0.2)",
             boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
           }}
         >
@@ -167,16 +162,12 @@ export default function LoginPage() {
           <form onSubmit={submit} className="space-y-5">
             <div className="space-y-4">
               <div>
-                <label 
-                  className="block text-sm font-semibold mb-2"
-                  style={{ color: "var(--text-2)" }}
-                >
+                <label className="block text-sm font-semibold mb-2 text-gray-700">
                   Email address
                 </label>
                 <div className="relative">
                   <svg 
-                    className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" 
-                    style={{ color: "var(--text-3)" }}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
                     fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
@@ -186,12 +177,7 @@ export default function LoginPage() {
                     required
                     autoFocus
                     autoComplete="email"
-                    className="w-full pl-12 pr-4 py-3.5 rounded-xl text-sm transition-all focus:outline-none focus:ring-2"
-                    style={{ 
-                      background: "var(--bg-subtle)",
-                      border: "1px solid var(--border)",
-                      color: "var(--text)",
-                    }}
+                    className="w-full pl-12 pr-4 py-3.5 rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 border border-gray-200 text-gray-900"
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -200,16 +186,12 @@ export default function LoginPage() {
               </div>
 
               <div>
-                <label 
-                  className="block text-sm font-semibold mb-2"
-                  style={{ color: "var(--text-2)" }}
-                >
+                <label className="block text-sm font-semibold mb-2 text-gray-700">
                   Password
                 </label>
                 <div className="relative">
                   <svg 
-                    className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" 
-                    style={{ color: "var(--text-3)" }}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
                     fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
@@ -218,12 +200,7 @@ export default function LoginPage() {
                     type={showPassword ? "text" : "password"}
                     required
                     autoComplete="current-password"
-                    className="w-full pl-12 pr-12 py-3.5 rounded-xl text-sm transition-all focus:outline-none focus:ring-2"
-                    style={{ 
-                      background: "var(--bg-subtle)",
-                      border: "1px solid var(--border)",
-                      color: "var(--text)",
-                    }}
+                    className="w-full pl-12 pr-12 py-3.5 rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 border border-gray-200 text-gray-900"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -231,8 +208,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-lg transition-colors"
-                    style={{ color: "var(--text-3)" }}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-lg transition-colors text-gray-400 hover:text-gray-600"
                   >
                     {showPassword ? (
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -282,11 +258,8 @@ export default function LoginPage() {
           </form>
 
           {/* Footer */}
-          <div 
-            className="mt-6 pt-5 border-t text-center"
-            style={{ borderColor: "var(--border)" }}
-          >
-            <p className="text-xs" style={{ color: "var(--text-3)" }}>
+          <div className="mt-6 pt-5 border-t border-gray-200 text-center">
+            <p className="text-xs text-gray-500">
               Build by:{" "}
               <span 
                 className="font-bold"
