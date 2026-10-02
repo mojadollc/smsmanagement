@@ -55,17 +55,22 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Configure your SMS platform</p>
+        <h1 className="text-2xl font-bold" style={{ color: "var(--text)" }}>Settings</h1>
+        <p className="text-sm mt-0.5" style={{ color: "var(--text-2)" }}>Configure your SMS platform</p>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-fit">
+      <div className="flex gap-1 p-1 rounded-lg w-fit" style={{ background: "var(--bg-subtle)" }}>
         {tabs.map((t) => (
           <button
             key={t.id}
             onClick={() => setActiveTab(t.id)}
-            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${activeTab === t.id ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+            className="px-4 py-1.5 rounded-md text-sm font-medium transition-all"
+            style={
+              activeTab === t.id
+                ? { background: "var(--bg-card)", color: "var(--text)", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }
+                : { background: "transparent", color: "var(--text-2)" }
+            }
           >
             {t.label}
           </button>
@@ -74,16 +79,21 @@ export default function SettingsPage() {
 
       <form onSubmit={save} className="space-y-4">
         {activeTab === "twilio" && (
-          <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+          <div className="card p-5 space-y-4" style={{ background: "var(--bg-card)" }}>
             <div>
-              <p className="font-semibold text-gray-900 mb-1">Twilio Credentials</p>
-              <p className="text-xs text-gray-400">Get these from your <a href="https://console.twilio.com" target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">Twilio Console</a></p>
+              <p className="font-semibold" style={{ color: "var(--text)" }}>Twilio Credentials</p>
+              <p className="text-xs mt-0.5" style={{ color: "var(--text-3)" }}>
+                Get these from your{" "}
+                <a href="https://console.twilio.com" target="_blank" rel="noreferrer" style={{ color: "var(--accent)" }}>
+                  Twilio Console
+                </a>
+              </p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Account SID</label>
+              <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-2)" }}>Account SID</label>
               <input
-                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input font-mono"
                 placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                 value={form.twilioAccountSid}
                 onChange={(e) => set("twilioAccountSid", e.target.value)}
@@ -91,26 +101,31 @@ export default function SettingsPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Auth Token</label>
+              <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-2)" }}>Auth Token</label>
               <div className="relative">
                 <input
                   type={showToken ? "text" : "password"}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 pr-16"
+                  className="input font-mono pr-16"
                   placeholder="••••••••••••••••••••••••••••••••"
                   value={form.twilioAuthToken}
                   onChange={(e) => set("twilioAuthToken", e.target.value)}
                 />
-                <button type="button" onClick={() => setShowToken(!showToken)} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-gray-600">
+                <button
+                  type="button"
+                  onClick={() => setShowToken(!showToken)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium"
+                  style={{ color: "var(--text-3)" }}
+                >
                   {showToken ? "Hide" : "Show"}
                 </button>
               </div>
-              <p className="text-xs text-gray-400 mt-1">Leave unchanged to keep existing token.</p>
+              <p className="text-xs mt-1" style={{ color: "var(--text-3)" }}>Leave unchanged to keep existing token.</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Messaging Service SID</label>
+              <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-2)" }}>Messaging Service SID</label>
               <input
-                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input font-mono"
                 placeholder="MGxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                 value={form.twilioMessagingServiceSid}
                 onChange={(e) => set("twilioMessagingServiceSid", e.target.value)}
@@ -118,40 +133,44 @@ export default function SettingsPage() {
             </div>
 
             {form.twilioAccountSid && !form.twilioAuthToken?.startsWith("•") && (
-              <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-                <span className="text-green-600 text-sm">✓</span>
-                <span className="text-sm text-green-700">Credentials configured</span>
+              <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", color: "#16a34a" }}>
+                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Credentials configured
               </div>
             )}
             {!form.twilioAccountSid && (
-              <div className="flex items-center gap-2 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
-                <span className="text-yellow-600 text-sm">⚠</span>
-                <span className="text-sm text-yellow-700">Twilio not configured — SMS sending is disabled</span>
+              <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm" style={{ background: "rgba(234,179,8,0.08)", border: "1px solid rgba(234,179,8,0.2)", color: "#ca8a04" }}>
+                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                Twilio not configured — SMS sending is disabled
               </div>
             )}
           </div>
         )}
 
         {activeTab === "general" && (
-          <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
-            <p className="font-semibold text-gray-900">General Settings</p>
+          <div className="card p-5 space-y-4" style={{ background: "var(--bg-card)" }}>
+            <p className="font-semibold" style={{ color: "var(--text)" }}>General Settings</p>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Daily SMS Limit</label>
+              <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-2)" }}>Daily SMS Limit</label>
               <input
                 type="number"
                 min={1}
-                className="w-32 border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input w-32"
                 value={form.dailyLimit}
                 onChange={(e) => set("dailyLimit", Number(e.target.value))}
               />
-              <p className="text-xs text-gray-400 mt-1">Max outbound SMS per day across all campaigns.</p>
+              <p className="text-xs mt-1" style={{ color: "var(--text-3)" }}>Max outbound SMS per day across all campaigns.</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">App URL</label>
+              <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-2)" }}>App URL</label>
               <input
-                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input"
                 placeholder="https://sms.beegoo.app"
                 value={form.appUrl}
                 onChange={(e) => set("appUrl", e.target.value)}
@@ -159,9 +178,9 @@ export default function SettingsPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Timezone</label>
+              <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-2)" }}>Timezone</label>
               <select
-                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input"
                 value={form.timezone}
                 onChange={(e) => set("timezone", e.target.value)}
               >
@@ -179,10 +198,15 @@ export default function SettingsPage() {
         )}
 
         {activeTab === "webhooks" && (
-          <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+          <div className="card p-5 space-y-4" style={{ background: "var(--bg-card)" }}>
             <div>
-              <p className="font-semibold text-gray-900 mb-1">Twilio Webhook URLs</p>
-              <p className="text-sm text-gray-500">Configure these in your <a href="https://console.twilio.com/us1/develop/sms/services" target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">Twilio Messaging Service</a></p>
+              <p className="font-semibold" style={{ color: "var(--text)" }}>Twilio Webhook URLs</p>
+              <p className="text-sm mt-0.5" style={{ color: "var(--text-2)" }}>
+                Configure these in your{" "}
+                <a href="https://console.twilio.com/us1/develop/sms/services" target="_blank" rel="noreferrer" style={{ color: "var(--accent)" }}>
+                  Twilio Messaging Service
+                </a>
+              </p>
             </div>
 
             {[
@@ -190,15 +214,18 @@ export default function SettingsPage() {
               { label: "Status Callback URL", path: "/api/webhooks/twilio/status" },
             ].map((w) => (
               <div key={w.path}>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">{w.label}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: "var(--text-3)" }}>{w.label}</p>
                 <div className="flex items-center gap-2">
-                  <code className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-xs text-gray-700 break-all">
+                  <code
+                    className="flex-1 px-3 py-2.5 rounded-lg text-xs break-all"
+                    style={{ background: "var(--bg-subtle)", border: "1px solid var(--border)", color: "var(--text-2)" }}
+                  >
                     {appUrl}{w.path}
                   </code>
                   <button
                     type="button"
                     onClick={() => navigator.clipboard.writeText(`${appUrl}${w.path}`)}
-                    className="shrink-0 text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-2.5 rounded-lg transition-colors"
+                    className="btn-ghost shrink-0 text-xs px-3 py-2.5"
                   >
                     Copy
                   </button>
@@ -206,7 +233,10 @@ export default function SettingsPage() {
               </div>
             ))}
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700">
+            <div
+              className="px-3 py-2.5 rounded-lg text-sm"
+              style={{ background: "var(--accent-soft)", border: "1px solid rgba(59,130,246,0.2)", color: "var(--accent-text)" }}
+            >
               Also enable <strong>Advanced Opt-Out</strong> in your Messaging Service for automatic STOP/START/HELP handling.
             </div>
           </div>
@@ -216,14 +246,23 @@ export default function SettingsPage() {
           <button
             type="submit"
             disabled={status === "saving" || activeTab === "webhooks"}
-            className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium text-sm hover:bg-blue-500 transition-colors disabled:opacity-50"
+            className="btn-primary px-6 py-2.5"
           >
             {status === "saving" ? "Saving..." : "Save Settings"}
           </button>
-          {status === "saved" && <span className="text-green-600 text-sm font-medium">✓ Saved</span>}
-          {status === "error" && <span className="text-red-600 text-sm">Failed to save</span>}
+          {status === "saved" && (
+            <span className="text-sm font-medium flex items-center gap-1.5" style={{ color: "#16a34a" }}>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              Saved
+            </span>
+          )}
+          {status === "error" && <span className="text-sm" style={{ color: "#dc2626" }}>Failed to save</span>}
           {form.updatedAt && status === "idle" && (
-            <span className="text-gray-400 text-xs">Last saved: {new Date(form.updatedAt).toLocaleString()}</span>
+            <span className="text-xs" style={{ color: "var(--text-3)" }}>
+              Last saved: {new Date(form.updatedAt).toLocaleString()}
+            </span>
           )}
         </div>
       </form>

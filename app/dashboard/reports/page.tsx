@@ -19,72 +19,104 @@ export default async function ReportsPage() {
 
   const deliveryRate = totalSent > 0 ? Math.round((totalDelivered / totalSent) * 100) : 0;
 
+  const allTimeRows = [
+    { label: "Total Sent",           value: totalSent,      color: "var(--text)" },
+    { label: "Delivered",            value: totalDelivered, color: "#16a34a" },
+    { label: "Failed / Undelivered", value: totalFailed,    color: "#dc2626" },
+    { label: "Opt-Outs",             value: totalOptOuts,   color: "#ea580c" },
+    { label: "Delivery Rate",        value: `${deliveryRate}%`, color: "#2563eb" },
+  ];
+
+  const todayRows = [
+    { label: "Sent",            value: sentToday,                    color: "var(--text)" },
+    { label: "Delivered",       value: deliveredToday,               color: "#16a34a" },
+    { label: "Remaining Limit", value: Math.max(0, 200 - sentToday), color: "#2563eb" },
+  ];
+
+  const statusColors: Record<string, { bg: string; text: string }> = {
+    running:   { bg: "rgba(234,179,8,0.12)",  text: "#ca8a04" },
+    scheduled: { bg: "rgba(59,130,246,0.12)", text: "#2563eb" },
+    completed: { bg: "rgba(34,197,94,0.12)",  text: "#16a34a" },
+    paused:    { bg: "rgba(148,163,184,0.12)", text: "#64748b" },
+    cancelled: { bg: "rgba(239,68,68,0.12)",  text: "#dc2626" },
+  };
+
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Reports</h1>
+      <div>
+        <h1 className="text-2xl font-bold" style={{ color: "var(--text)" }}>Reports</h1>
+        <p className="text-sm mt-0.5" style={{ color: "var(--text-2)" }}>SMS delivery analytics and campaign performance</p>
+      </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white border rounded-lg p-5">
-          <h2 className="font-semibold mb-4">All Time</h2>
+        <div className="card p-5" style={{ background: "var(--bg-card)" }}>
+          <h2 className="font-semibold mb-4" style={{ color: "var(--text)" }}>All Time</h2>
           <div className="space-y-3">
-            {[
-              { label: "Total Sent", value: totalSent },
-              { label: "Delivered", value: totalDelivered, color: "text-green-600" },
-              { label: "Failed / Undelivered", value: totalFailed, color: "text-red-600" },
-              { label: "Opt-Outs", value: totalOptOuts, color: "text-orange-600" },
-              { label: "Delivery Rate", value: `${deliveryRate}%`, color: "text-blue-600" },
-            ].map((row) => (
-              <div key={row.label} className="flex justify-between text-sm">
-                <span className="text-gray-600">{row.label}</span>
-                <span className={`font-semibold ${row.color ?? ""}`}>{row.value}</span>
+            {allTimeRows.map((row) => (
+              <div key={row.label} className="flex justify-between items-center text-sm">
+                <span style={{ color: "var(--text-2)" }}>{row.label}</span>
+                <span className="font-semibold" style={{ color: row.color }}>{row.value}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="bg-white border rounded-lg p-5">
-          <h2 className="font-semibold mb-4">Today</h2>
+        <div className="card p-5" style={{ background: "var(--bg-card)" }}>
+          <h2 className="font-semibold mb-4" style={{ color: "var(--text)" }}>Today</h2>
           <div className="space-y-3">
-            {[
-              { label: "Sent", value: sentToday },
-              { label: "Delivered", value: deliveredToday, color: "text-green-600" },
-              { label: "Remaining Limit", value: Math.max(0, 200 - sentToday), color: "text-blue-600" },
-            ].map((row) => (
-              <div key={row.label} className="flex justify-between text-sm">
-                <span className="text-gray-600">{row.label}</span>
-                <span className={`font-semibold ${row.color ?? ""}`}>{row.value}</span>
+            {todayRows.map((row) => (
+              <div key={row.label} className="flex justify-between items-center text-sm">
+                <span style={{ color: "var(--text-2)" }}>{row.label}</span>
+                <span className="font-semibold" style={{ color: row.color }}>{row.value}</span>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      <div className="bg-white border rounded-lg overflow-hidden">
-        <div className="p-4 border-b font-semibold">Campaign Performance</div>
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Campaign</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Total</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Sent</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Delivered</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Failed</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Opt-Outs</th>
-            </tr>
-          </thead>
-          <tbody>
-            {campaigns.map((c) => (
-              <tr key={c.id} className="border-b hover:bg-gray-50">
-                <td className="px-4 py-3 font-medium">{c.name}</td>
-                <td className="px-4 py-3">{c.totalCount}</td>
-                <td className="px-4 py-3">{c.sent}</td>
-                <td className="px-4 py-3 text-green-600">{c.delivered}</td>
-                <td className="px-4 py-3 text-red-600">{c.failed}</td>
-                <td className="px-4 py-3 text-orange-600">{c.optedOut}</td>
+      <div className="card overflow-hidden" style={{ background: "var(--bg-card)" }}>
+        <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
+          <h2 className="font-semibold" style={{ color: "var(--text)" }}>Campaign Performance</h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr style={{ borderBottom: "1px solid var(--border)", background: "var(--bg-subtle)" }}>
+                {["Campaign", "Total", "Sent", "Delivered", "Failed", "Opt-Outs", "Status"].map((h) => (
+                  <th key={h} className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--text-3)" }}>
+                    {h}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {campaigns.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-5 py-8 text-center text-sm" style={{ color: "var(--text-3)" }}>
+                    No campaigns yet
+                  </td>
+                </tr>
+              ) : campaigns.map((c) => {
+                const sc = statusColors[c.status] ?? statusColors.paused;
+                return (
+                  <tr key={c.id} style={{ borderBottom: "1px solid var(--border-soft)" }}>
+                    <td className="px-5 py-3 font-medium" style={{ color: "var(--text)" }}>{c.name}</td>
+                    <td className="px-5 py-3" style={{ color: "var(--text-2)" }}>{c.totalCount}</td>
+                    <td className="px-5 py-3" style={{ color: "var(--text-2)" }}>{c.sent}</td>
+                    <td className="px-5 py-3 font-medium" style={{ color: "#16a34a" }}>{c.delivered}</td>
+                    <td className="px-5 py-3 font-medium" style={{ color: "#dc2626" }}>{c.failed}</td>
+                    <td className="px-5 py-3 font-medium" style={{ color: "#ea580c" }}>{c.optedOut}</td>
+                    <td className="px-5 py-3">
+                      <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ background: sc.bg, color: sc.text }}>
+                        {c.status}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

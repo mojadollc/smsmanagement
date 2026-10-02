@@ -3,20 +3,84 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 const nav = [
-  { href: "/dashboard", label: "Dashboard", icon: "▦", exact: true },
-  { href: "/dashboard/inbox", label: "Inbox", icon: "💬" },
-  { href: "/dashboard/customers", label: "Customers", icon: "👥" },
-  { href: "/dashboard/campaigns", label: "Campaigns", icon: "📣" },
-  { href: "/dashboard/messages", label: "Send SMS", icon: "✉️" },
-  { href: "/dashboard/phone-numbers", label: "Phone Numbers", icon: "📱" },
-  { href: "/dashboard/reports", label: "Reports", icon: "📈" },
+  {
+    href: "/dashboard", label: "Dashboard", exact: true,
+    icon: (
+      <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+      </svg>
+    ),
+  },
+  {
+    href: "/dashboard/inbox", label: "Inbox",
+    icon: (
+      <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+      </svg>
+    ),
+  },
+  {
+    href: "/dashboard/customers", label: "Customers",
+    icon: (
+      <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+    ),
+  },
+  {
+    href: "/dashboard/campaigns", label: "Campaigns",
+    icon: (
+      <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+      </svg>
+    ),
+  },
+  {
+    href: "/dashboard/messages", label: "Send SMS",
+    icon: (
+      <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+      </svg>
+    ),
+  },
+  {
+    href: "/dashboard/phone-numbers", label: "Phone Numbers",
+    icon: (
+      <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+      </svg>
+    ),
+  },
+  {
+    href: "/dashboard/reports", label: "Reports",
+    icon: (
+      <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      </svg>
+    ),
+  },
 ];
 
 const adminNav = [
-  { href: "/dashboard/admin", label: "Admin Panel", icon: "🛡️" },
-  { href: "/dashboard/settings", label: "Settings", icon: "⚙️" },
+  {
+    href: "/dashboard/admin", label: "Admin Panel",
+    icon: (
+      <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+      </svg>
+    ),
+  },
+  {
+    href: "/dashboard/settings", label: "Settings",
+    icon: (
+      <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+    ),
+  },
 ];
 
 interface User { name?: string; email: string; role: string; }
@@ -49,119 +113,136 @@ export default function Sidebar() {
 
   return (
     <>
-      <aside className="w-60 min-h-screen bg-gray-950 border-r border-gray-800 flex flex-col">
+      <aside
+        className="w-60 min-h-screen flex flex-col"
+        style={{ background: "var(--sidebar-bg)", borderRight: "1px solid var(--sidebar-border)" }}
+      >
         {/* Logo */}
-        <div className="p-5 border-b border-gray-800">
+        <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--sidebar-border)" }}>
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/20">
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-600/30 shrink-0">
+              <svg className="w-4.5 h-4.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
               </svg>
             </div>
-            <div>
-              <h1 className="text-sm font-bold text-white">SMS Dashboard</h1>
-              <p className="text-xs text-gray-600">beegoo.app</p>
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-white leading-tight">SMS Dashboard</p>
+              <p className="text-xs" style={{ color: "var(--sidebar-text)" }}>beegoo.app</p>
             </div>
           </div>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 p-3 overflow-y-auto">
-          <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider px-3 py-2">Main</p>
-          <div className="space-y-0.5">
-            {nav.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                  isActive(item.href, item.exact)
-                    ? "bg-blue-600 text-white shadow-sm shadow-blue-600/30"
-                    : "text-gray-400 hover:text-white hover:bg-gray-800/80"
-                }`}
-              >
-                <span className="text-base w-5 text-center">{item.icon}</span>
-                {item.label}
-              </Link>
-            ))}
-          </div>
-
-          {user?.role === "admin" && (
-            <>
-              <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider px-3 py-2 mt-5">Admin</p>
-              <div className="space-y-0.5">
-                {adminNav.map((item) => (
+        <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-5">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest px-3 mb-2" style={{ color: "var(--sidebar-text)" }}>
+              Main
+            </p>
+            <div className="space-y-0.5">
+              {nav.map((item) => {
+                const active = isActive(item.href, item.exact);
+                return (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                      isActive(item.href)
-                        ? "bg-blue-600 text-white shadow-sm shadow-blue-600/30"
-                        : "text-gray-400 hover:text-white hover:bg-gray-800/80"
-                    }`}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all"
+                    style={{
+                      background: active ? "var(--sidebar-active)" : "transparent",
+                      color: active ? "var(--sidebar-text-active)" : "var(--sidebar-text)",
+                    }}
+                    onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = "var(--sidebar-hover)"; (e.currentTarget as HTMLElement).style.color = "#fff"; }}
+                    onMouseLeave={(e) => { if (!active) { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "var(--sidebar-text)"; } }}
                   >
-                    <span className="text-base w-5 text-center">{item.icon}</span>
+                    <span className="shrink-0">{item.icon}</span>
                     {item.label}
                   </Link>
-                ))}
+                );
+              })}
+            </div>
+          </div>
+
+          {user?.role === "admin" && (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest px-3 mb-2" style={{ color: "var(--sidebar-text)" }}>
+                Admin
+              </p>
+              <div className="space-y-0.5">
+                {adminNav.map((item) => {
+                  const active = isActive(item.href);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all"
+                      style={{
+                        background: active ? "var(--sidebar-active)" : "transparent",
+                        color: active ? "var(--sidebar-text-active)" : "var(--sidebar-text)",
+                      }}
+                      onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = "var(--sidebar-hover)"; (e.currentTarget as HTMLElement).style.color = "#fff"; }}
+                      onMouseLeave={(e) => { if (!active) { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "var(--sidebar-text)"; } }}
+                    >
+                      <span className="shrink-0">{item.icon}</span>
+                      {item.label}
+                    </Link>
+                  );
+                })}
               </div>
-            </>
+            </div>
           )}
         </nav>
 
-        {/* User profile */}
-        <div className="p-3 border-t border-gray-800">
-          <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-800/60 transition-colors group">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0">
+        {/* Bottom: theme toggle + user */}
+        <div className="px-3 pb-4 space-y-2" style={{ borderTop: "1px solid var(--sidebar-border)", paddingTop: "0.75rem" }}>
+          {/* Theme toggle row */}
+          <div className="flex items-center justify-between px-3 py-2">
+            <span className="text-xs font-medium" style={{ color: "var(--sidebar-text)" }}>Dark mode</span>
+            <ThemeToggle />
+          </div>
+
+          {/* User row */}
+          <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg group" style={{ cursor: "default" }}>
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0">
               {initials}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">{user?.name || user?.email || "User"}</p>
-              <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
+              <p className="text-sm font-medium text-white truncate leading-tight">{user?.name || user?.email || "User"}</p>
+              <p className="text-xs capitalize" style={{ color: "var(--sidebar-text)" }}>{user?.role}</p>
             </div>
             <button
               onClick={() => setShowLogout(true)}
-              className="text-gray-600 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 p-1 rounded-lg hover:bg-red-400/10"
+              className="shrink-0 p-1.5 rounded-md transition-colors opacity-0 group-hover:opacity-100"
+              style={{ color: "var(--sidebar-text)" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#f87171"; (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.1)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--sidebar-text)"; (e.currentTarget as HTMLElement).style.background = "transparent"; }}
               title="Sign out"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
             </button>
           </div>
         </div>
       </aside>
 
-      {/* Logout confirmation modal */}
+      {/* Logout modal */}
       {showLogout && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => !loggingOut && setShowLogout(false)}
-          />
-          {/* Modal */}
-          <div className="relative bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
-            <div className="flex items-center justify-center w-12 h-12 bg-red-500/10 rounded-full mx-auto mb-4">
-              <svg className="w-6 h-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => !loggingOut && setShowLogout(false)} />
+          <div className="relative card p-6 w-full max-w-sm shadow-2xl" style={{ background: "var(--bg-card)" }}>
+            <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: "rgba(239,68,68,0.1)" }}>
+              <svg className="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-white text-center mb-1">Sign out</h3>
-            <p className="text-sm text-gray-400 text-center mb-6">
-              Are you sure you want to sign out of your account?
-            </p>
+            <h3 className="text-lg font-semibold text-center mb-1" style={{ color: "var(--text)" }}>Sign out</h3>
+            <p className="text-sm text-center mb-6" style={{ color: "var(--text-2)" }}>Are you sure you want to sign out?</p>
             <div className="flex gap-3">
-              <button
-                onClick={() => setShowLogout(false)}
-                disabled={loggingOut}
-                className="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-medium py-2.5 rounded-xl text-sm transition-colors disabled:opacity-50"
-              >
-                Cancel
-              </button>
+              <button onClick={() => setShowLogout(false)} disabled={loggingOut} className="btn-ghost flex-1">Cancel</button>
               <button
                 onClick={confirmLogout}
                 disabled={loggingOut}
-                className="flex-1 bg-red-600 hover:bg-red-500 text-white font-medium py-2.5 rounded-xl text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold text-white transition-colors disabled:opacity-50"
+                style={{ background: "#dc2626" }}
               >
                 {loggingOut ? (
                   <>

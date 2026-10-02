@@ -51,100 +51,132 @@ export default function AdminPage() {
     load();
   }
 
+  const inputCls = "input text-sm";
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Admin Panel</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Manage users and system access</p>
+        <h1 className="text-2xl font-bold" style={{ color: "var(--text)" }}>Admin Panel</h1>
+        <p className="text-sm mt-0.5" style={{ color: "var(--text-2)" }}>Manage users and system access</p>
       </div>
 
-      {/* Users */}
-      <div className="bg-white rounded-xl border border-gray-200">
-        <div className="flex justify-between items-center p-5 border-b border-gray-100">
-          <h2 className="font-semibold text-gray-900">Users</h2>
-          <button onClick={() => setShowAdd(true)} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-500 transition-colors">
+      <div className="card overflow-hidden" style={{ background: "var(--bg-card)" }}>
+        {/* Header */}
+        <div className="flex justify-between items-center px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
+          <h2 className="font-semibold" style={{ color: "var(--text)" }}>Users</h2>
+          <button onClick={() => setShowAdd(true)} className="btn-primary text-sm px-4 py-2">
             + Add User
           </button>
         </div>
 
+        {/* Add user form */}
         {showAdd && (
-          <form onSubmit={addUser} className="p-5 border-b border-gray-100 bg-gray-50">
+          <form onSubmit={addUser} className="px-5 py-4" style={{ borderBottom: "1px solid var(--border)", background: "var(--bg-subtle)" }}>
             <div className="grid grid-cols-2 gap-3 mb-3">
-              <input required placeholder="Full Name" className="border rounded-lg px-3 py-2 text-sm" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-              <input required type="email" placeholder="Email" className="border rounded-lg px-3 py-2 text-sm" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-              <input required type="password" placeholder="Password" className="border rounded-lg px-3 py-2 text-sm" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
-              <select className="border rounded-lg px-3 py-2 text-sm" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
+              <input required placeholder="Full Name" className={inputCls} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              <input required type="email" placeholder="Email" className={inputCls} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+              <input required type="password" placeholder="Password" className={inputCls} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+              <select className={inputCls} value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
                 <option value="agent">Agent</option>
                 <option value="admin">Admin</option>
               </select>
             </div>
             <div className="flex gap-2">
-              <button type="submit" disabled={saving} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50">Save</button>
-              <button type="button" onClick={() => setShowAdd(false)} className="border px-4 py-2 rounded-lg text-sm">Cancel</button>
+              <button type="submit" disabled={saving} className="btn-primary text-sm px-4 py-2 disabled:opacity-50">Save</button>
+              <button type="button" onClick={() => setShowAdd(false)} className="btn-ghost text-sm px-4 py-2">Cancel</button>
             </div>
           </form>
         )}
 
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-100">
-            <tr>
-              <th className="text-left px-5 py-3 font-medium text-gray-500">Name</th>
-              <th className="text-left px-5 py-3 font-medium text-gray-500">Email</th>
-              <th className="text-left px-5 py-3 font-medium text-gray-500">Role</th>
-              <th className="text-left px-5 py-3 font-medium text-gray-500">Status</th>
-              <th className="px-5 py-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((u) => (
-              <tr key={u.id} className="border-b border-gray-50 hover:bg-gray-50">
-                {editId === u.id ? (
-                  <>
-                    <td className="px-5 py-3">
-                      <input className="border rounded px-2 py-1 text-sm w-full" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
-                    </td>
-                    <td className="px-5 py-3 text-gray-400">{u.email}</td>
-                    <td className="px-5 py-3">
-                      <select className="border rounded px-2 py-1 text-sm" value={editForm.role} onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}>
-                        <option value="agent">Agent</option>
-                        <option value="admin">Admin</option>
-                      </select>
-                    </td>
-                    <td className="px-5 py-3">
-                      <select className="border rounded px-2 py-1 text-sm" value={editForm.active ? "true" : "false"} onChange={(e) => setEditForm({ ...editForm, active: e.target.value === "true" })}>
-                        <option value="true">Active</option>
-                        <option value="false">Inactive</option>
-                      </select>
-                    </td>
-                    <td className="px-5 py-3 flex gap-2">
-                      <button onClick={() => updateUser(u.id)} disabled={saving} className="text-xs bg-blue-600 text-white px-3 py-1 rounded-lg disabled:opacity-50">Save</button>
-                      <button onClick={() => setEditId(null)} className="text-xs border px-3 py-1 rounded-lg">Cancel</button>
-                    </td>
-                  </>
-                ) : (
-                  <>
-                    <td className="px-5 py-3 font-medium text-gray-900">{u.name}</td>
-                    <td className="px-5 py-3 text-gray-500">{u.email}</td>
-                    <td className="px-5 py-3">
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${u.role === "admin" ? "bg-purple-100 text-purple-700" : "bg-gray-100 text-gray-600"}`}>
-                        {u.role}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3">
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${u.active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
-                        {u.active ? "Active" : "Inactive"}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3 flex gap-2">
-                      <button onClick={() => { setEditId(u.id); setEditForm({ name: u.name, role: u.role, active: u.active, password: "" }); }} className="text-xs text-blue-600 hover:underline">Edit</button>
-                      <button onClick={() => deleteUser(u.id)} className="text-xs text-red-500 hover:underline">Delete</button>
-                    </td>
-                  </>
-                )}
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr style={{ borderBottom: "1px solid var(--border)", background: "var(--bg-subtle)" }}>
+                {["Name", "Email", "Role", "Status", ""].map((h) => (
+                  <th key={h} className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--text-3)" }}>
+                    {h}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {users.map((u) => (
+                <tr key={u.id} style={{ borderBottom: "1px solid var(--border-soft)" }}>
+                  {editId === u.id ? (
+                    <>
+                      <td className="px-5 py-3">
+                        <input className={inputCls} value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
+                      </td>
+                      <td className="px-5 py-3 text-sm" style={{ color: "var(--text-3)" }}>{u.email}</td>
+                      <td className="px-5 py-3">
+                        <select className={inputCls} value={editForm.role} onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}>
+                          <option value="agent">Agent</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                      </td>
+                      <td className="px-5 py-3">
+                        <select className={inputCls} value={editForm.active ? "true" : "false"} onChange={(e) => setEditForm({ ...editForm, active: e.target.value === "true" })}>
+                          <option value="true">Active</option>
+                          <option value="false">Inactive</option>
+                        </select>
+                      </td>
+                      <td className="px-5 py-3">
+                        <div className="flex gap-2">
+                          <button onClick={() => updateUser(u.id)} disabled={saving} className="btn-primary text-xs px-3 py-1.5 disabled:opacity-50">Save</button>
+                          <button onClick={() => setEditId(null)} className="btn-ghost text-xs px-3 py-1.5">Cancel</button>
+                        </div>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="px-5 py-3 font-medium" style={{ color: "var(--text)" }}>{u.name}</td>
+                      <td className="px-5 py-3" style={{ color: "var(--text-2)" }}>{u.email}</td>
+                      <td className="px-5 py-3">
+                        <span
+                          className="text-xs px-2.5 py-1 rounded-full font-medium"
+                          style={
+                            u.role === "admin"
+                              ? { background: "rgba(168,85,247,0.12)", color: "#9333ea" }
+                              : { background: "var(--bg-subtle)", color: "var(--text-2)" }
+                          }
+                        >
+                          {u.role}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3">
+                        <span
+                          className="text-xs px-2.5 py-1 rounded-full font-medium"
+                          style={
+                            u.active
+                              ? { background: "rgba(34,197,94,0.12)", color: "#16a34a" }
+                              : { background: "rgba(239,68,68,0.12)", color: "#dc2626" }
+                          }
+                        >
+                          {u.active ? "Active" : "Inactive"}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3">
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => { setEditId(u.id); setEditForm({ name: u.name, role: u.role, active: u.active, password: "" }); }}
+                            className="text-xs font-medium"
+                            style={{ color: "var(--accent)" }}
+                          >
+                            Edit
+                          </button>
+                          <button onClick={() => deleteUser(u.id)} className="text-xs font-medium" style={{ color: "#dc2626" }}>
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
