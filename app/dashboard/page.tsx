@@ -37,10 +37,14 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null);
 
   useEffect(() => {
+    let mounted = true;
     fetch("/api/reports")
       .then((r) => r.ok ? r.json() : null)
-      .then(setStats)
+      .then((d) => {
+        if (mounted) setStats(d);
+      })
       .catch(() => {});
+    return () => { mounted = false; };
   }, []);
 
   if (!stats) {

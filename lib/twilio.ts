@@ -1,8 +1,22 @@
 import twilio from "twilio";
 import { prisma } from "./prisma";
 
+interface SettingsRow {
+  twilioAccountSid: string;
+  twilioAuthToken: string;
+  twilioMessagingServiceSid: string;
+}
+
+async function getSettings(): Promise<SettingsRow | null> {
+  const rows = await prisma.$queryRaw<SettingsRow[]>`
+    SELECT "twilioAccountSid", "twilioAuthToken", "twilioMessagingServiceSid"
+    FROM "Settings" WHERE id = 'singleton' LIMIT 1
+  `.catch(() => []);
+  return rows[0] ?? null;
+}
+
 async function getClient() {
-  const settings = await prisma.settings.findUnique({ where: { id: "singleton" } });
+  const settings = await getSettings();
 
   const sid = settings?.twilioAccountSid || process.env.TWILIO_ACCOUNT_SID!;
   const token = settings?.twilioAuthToken || process.env.TWILIO_AUTH_TOKEN!;
@@ -35,7 +49,7 @@ export async function validateWebhook(
   url: string,
   params: Record<string, string>
 ) {
-  const settings = await prisma.settings.findUnique({ where: { id: "singleton" } });
+  const settings = await getSettings();
   const token = settings?.twilioAuthToken || process.env.TWILIO_AUTH_TOKEN!;
   return twilio.validateRequest(token, signature, url, params);
 }

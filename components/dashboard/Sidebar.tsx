@@ -94,10 +94,19 @@ export default function Sidebar() {
   const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
+    let mounted = true;
     fetch("/api/auth/me")
       .then((r) => r.ok ? r.json() : null)
-      .then((d) => { setUser(d); setUserLoading(false); })
-      .catch(() => setUserLoading(false));
+      .then((d) => {
+        if (mounted) {
+          setUser(d);
+          setUserLoading(false);
+        }
+      })
+      .catch(() => {
+        if (mounted) setUserLoading(false);
+      });
+    return () => { mounted = false; };
   }, []);
 
   async function confirmLogout() {
