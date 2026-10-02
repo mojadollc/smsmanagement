@@ -4,6 +4,8 @@ set -e
 # ─────────────────────────────────────────────
 # SMS Management - VPS Deploy Script
 # Domain: sms.beegoo.app | Port: 4000
+# Twilio credentials are configured AFTER
+# login via the Settings page in the dashboard
 # ─────────────────────────────────────────────
 
 APP_DIR="/var/www/sms"
@@ -22,38 +24,10 @@ log()  { echo -e "${GREEN}[✓] $1${NC}"; }
 warn() { echo -e "${YELLOW}[!] $1${NC}"; }
 die()  { echo -e "${RED}[✗] $1${NC}"; exit 1; }
 
-# ─────────────────────────────────────────────
-# 0. Collect secrets
-# ─────────────────────────────────────────────
 echo ""
 echo "════════════════════════════════════════"
 echo "  SMS Management Deploy — sms.beegoo.app"
 echo "════════════════════════════════════════"
-echo ""
-
-# ── Auto-detect PostgreSQL connection ──
-log "Detecting PostgreSQL setup..."
-
-# Try peer auth first (no password needed)
-if sudo -u postgres psql -c "\q" &>/dev/null; then
-  warn "Using peer authentication (no password needed)"
-  PG_PASS=""
-  DB_URL="postgresql://postgres@localhost:5432/${DB_NAME}"
-else
-  # Try to find password from existing app .env files
-  FOUND_PG=$(grep -r 'DATABASE_URL' /var/www/*/  --include=".env" -h 2>/dev/null | grep -oP '(?<=:)[^@]+(?=@)' | head -1 || true)
-  if [ -n "$FOUND_PG" ]; then
-    warn "Found existing PostgreSQL password from another app."
-    PG_PASS="$FOUND_PG"
-  else
-    read -rp "Could not auto-detect. Enter PostgreSQL password for 'postgres' user: " PG_PASS
-  fi
-  DB_URL="postgresql://postgres:${PG_PASS}@localhost:5432/${DB_NAME}"
-fi
-read -rp "Twilio Account SID (ACxxx...): " TWILIO_SID
-read -rp "Twilio Auth Token: " TWILIO_TOKEN
-read -rp "Twilio Messaging Service SID (MGxxx...): " TWILIO_MSG_SID
-
 echo ""
 
 # ─────────────────────────────────────────────
@@ -97,7 +71,61 @@ else
 fi
 
 # ─────────────────────────────────────────────
-# 5. Clone / pull repo
+# 5. Auto-detect PostgreSQL credentials
+# ─────────────────────────────────────────────
+log "Detecting PostgreSQL credentials from existing apps..."
+
+PG_USER="postgres"
+PG_PASS=""
+PG_HOST="localhost"
+PG_PORT="5432"
+
+ENV_FILES=$(find /var/www /home /root /srv -maxdepth 4 -name ".env" 2>/dev/null | grep -v "$APP_DIR" | head -20)
+
+for f in $ENV_FILES; do
+  URL=$(grep -oP 'DATABASE_URL=["'"'"']?\K[^"'"'"'\n]+' "$f" 2>/dev/null | grep -i 'postgres' | head -1 || true)
+  if [ -n "$URL" ]; then
+    EXTRACTED_USER=$(echo "$URL" | grep -oP '(?<=://)([^:@]+)' | head -1 || true)
+    EXTRACTED_PASS=$(echo "$URL" | grep -oP '(?<=://[^:]{1,50}:)([^@]+)' | head -1 || true)
+    EXTRACTED_HOST=$(echo "$URL" | grep -oP '(?<=@)([^:/]+)' | head -1 || true)
+    EXTRACTED_PORT=$(echo "$URL" | grep -oP '(?<=@[^:]{1,50}:)(\d+)' | head -1 || true)
+    if [ -n "$EXTRACTED_PASS" ]; then
+      PG_USER="${EXTRACTED_USER:-postgres}"
+      PG_PASS="$EXTRACTED_PASS"
+      PG_HOST="${EXTRACTED_HOST:-localhost}"
+      PG_PORT="${EXTRACTED_PORT:-5432}"
+      warn "Found PostgreSQL credentials from: $f (user: $PG_USER @ $PG_HOST:$PG_PORT)"
+      break
+    fi
+  fi
+done
+
+# Verify found credentials work
+if [ -n "$PG_PASS" ]; then
+  if PGPASSWORD="$PG_PASS" psql -U "$PG_USER" -h "$PG_HOST" -p "$PG_PORT" -c "\q" &>/dev/null; then
+    log "PostgreSQL credentials verified."
+    DB_URL="postgresql://${PG_USER}:${PG_PASS}@${PG_HOST}:${PG_PORT}/${DB_NAME}"
+  else
+    warn "Found credentials but could not connect. Trying peer auth..."
+    PG_PASS=""
+  fi
+fi
+
+# Fallback: peer auth
+if [ -z "$PG_PASS" ]; then
+  if sudo -u postgres psql -c "\q" &>/dev/null; then
+    log "Using PostgreSQL peer authentication."
+    DB_URL="postgresql://postgres@localhost:5432/${DB_NAME}"
+  else
+    read -rp "Could not auto-detect PostgreSQL password. Enter it manually: " PG_PASS
+    DB_URL="postgresql://postgres:${PG_PASS}@localhost:5432/${DB_NAME}"
+  fi
+fi
+
+log "Database URL ready."
+
+# ─────────────────────────────────────────────
+# 6. Clone / pull repo
 # ─────────────────────────────────────────────
 if [ -d "$APP_DIR/.git" ]; then
   log "Repo exists — pulling latest..."
@@ -111,47 +139,57 @@ else
 fi
 
 # ─────────────────────────────────────────────
-# 6. Write .env
+# 7. Write .env (no Twilio keys — set via Settings page)
 # ─────────────────────────────────────────────
 log "Writing .env..."
 cat > "$APP_DIR/.env" <<EOF
 DATABASE_URL="${DB_URL}"
-TWILIO_ACCOUNT_SID=${TWILIO_SID}
-TWILIO_AUTH_TOKEN=${TWILIO_TOKEN}
-TWILIO_MESSAGING_SERVICE_SID=${TWILIO_MSG_SID}
 NEXT_PUBLIC_APP_URL=https://${DOMAIN}
+# Twilio credentials are configured via the Settings page
+# at https://${DOMAIN}/dashboard/settings
+TWILIO_ACCOUNT_SID=
+TWILIO_AUTH_TOKEN=
+TWILIO_MESSAGING_SERVICE_SID=
 EOF
 chmod 600 "$APP_DIR/.env"
 
 # ─────────────────────────────────────────────
-# 7. Create database
+# 8. Create database
 # ─────────────────────────────────────────────
 log "Creating database '$DB_NAME' if not exists..."
-sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}'" \
-  | grep -q 1 || sudo -u postgres psql -c "CREATE DATABASE ${DB_NAME};"
+if [ -n "$PG_PASS" ]; then
+  PGPASSWORD="$PG_PASS" psql -U "$PG_USER" -h "$PG_HOST" -p "$PG_PORT" \
+    -tc "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}'" \
+    | grep -q 1 || PGPASSWORD="$PG_PASS" psql -U "$PG_USER" -h "$PG_HOST" -p "$PG_PORT" \
+    -c "CREATE DATABASE ${DB_NAME};"
+else
+  sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}'" \
+    | grep -q 1 || sudo -u postgres psql -c "CREATE DATABASE ${DB_NAME};"
+fi
+log "Database ready."
 
 # ─────────────────────────────────────────────
-# 8. Install dependencies
+# 9. Install dependencies
 # ─────────────────────────────────────────────
 log "Installing npm dependencies..."
 cd "$APP_DIR"
 npm install --production=false
 
 # ─────────────────────────────────────────────
-# 9. Run migrations & generate Prisma client
+# 10. Run migrations & generate Prisma client
 # ─────────────────────────────────────────────
 log "Running Prisma migrations..."
 npx prisma migrate deploy
 npx prisma generate
 
 # ─────────────────────────────────────────────
-# 10. Build Next.js
+# 11. Build Next.js
 # ─────────────────────────────────────────────
 log "Building Next.js app..."
 npm run build
 
 # ─────────────────────────────────────────────
-# 11. Start with PM2
+# 12. Start with PM2
 # ─────────────────────────────────────────────
 log "Starting app with PM2..."
 pm2 delete sms-dashboard 2>/dev/null || true
@@ -163,7 +201,7 @@ pm2 save
 pm2 startup systemd -u root --hp /root | tail -1 | bash || true
 
 # ─────────────────────────────────────────────
-# 12. Nginx config
+# 13. Nginx config
 # ─────────────────────────────────────────────
 log "Configuring Nginx..."
 cat > /etc/nginx/sites-available/${DOMAIN} <<EOF
@@ -191,7 +229,7 @@ systemctl reload nginx
 log "Nginx configured."
 
 # ─────────────────────────────────────────────
-# 13. SSL with Let's Encrypt
+# 14. SSL with Let's Encrypt
 # ─────────────────────────────────────────────
 log "Obtaining SSL certificate..."
 certbot --nginx -d ${DOMAIN} --non-interactive --agree-tos \
@@ -204,8 +242,9 @@ echo ""
 echo -e "${GREEN}════════════════════════════════════════${NC}"
 echo -e "${GREEN}  ✓ Deployed: https://${DOMAIN}${NC}"
 echo -e "${GREEN}  ✓ App running on port ${PORT}${NC}"
-echo -e "${GREEN}  ✓ PM2 processes:${NC}"
-pm2 list
 echo -e "${GREEN}════════════════════════════════════════${NC}"
 echo ""
-warn "Remember to change your VPS root password!"
+echo -e "${YELLOW}  NEXT STEP: Configure Twilio credentials${NC}"
+echo -e "${YELLOW}  → https://${DOMAIN}/dashboard/settings${NC}"
+echo ""
+pm2 list
