@@ -14,16 +14,22 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      router.push("/dashboard");
-    } else {
-      setError(data.error || "Login failed");
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        router.push("/dashboard");
+        router.refresh();
+      } else {
+        setError(data.error || "Login failed");
+        setLoading(false);
+      }
+    } catch (err) {
+      setError("Network error. Please try again.");
       setLoading(false);
     }
   }
