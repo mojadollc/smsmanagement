@@ -33,7 +33,8 @@ async function getStats() {
 
 export default async function DashboardPage() {
   const stats = await getStats();
-  const dailyLimit = 200;
+  const settingsData = await prisma.settings.findUnique({ where: { id: "singleton" } }).catch(() => null);
+  const dailyLimit = settingsData?.dailyLimit ?? 200;
 
   if (!stats) {
     return (
