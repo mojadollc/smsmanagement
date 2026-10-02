@@ -144,6 +144,16 @@ model DeliveryEvent {
   message   Message  @relation(fields: [messageId], references: [id])
 }
 
+model Settings {
+  id        String   @id @default("singleton")
+  twilioAccountSid        String   @default("")
+  twilioAuthToken         String   @default("")
+  twilioMessagingServiceSid String @default("")
+  dailyLimit              Int      @default(200)
+  appUrl                  String   @default("")
+  updatedAt               DateTime @updatedAt
+}
+
 model MessageTemplate {
   id        String   @id @default(cuid())
   name      String
