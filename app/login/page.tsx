@@ -269,7 +269,7 @@ export default function LoginPage() {
                   WebkitTextFillColor: "transparent"
                 }}
               >
-                MOJADOO
+                Cyber-BlakSton
               </span>
             </p>
           </div>

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
-/* ── Uber Move Font Family ─────────────────────────────────── */
-/* Uses Google Fonts API for proper Uber Move rendering */
+/* ── Google Fonts - Roboto ──────────────────────────────────── */
+/* Roboto: Thin 100, ExtraLight 200, Light 300, Regular 400, Medium 500, Bold 700, Black 900 */
 
 /* ── Theme tokens ─────────────────────────────────────────── */
 :root {
@@ -54,16 +54,17 @@
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: 'Uber Move', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Roboto', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 300;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background 0.2s, color 0.2s;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Uber Move', system-ui, sans-serif;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-family: 'Roboto', system-ui, sans-serif;
+  font-weight: 200;
+  letter-spacing: -0.01em;
 }
 
 /* ── Utility classes ──────────────────────────────────────── */
@@ -80,7 +81,8 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 0.5rem;
   padding: 0.625rem 0.875rem;
   font-size: 0.875rem;
-  font-family: 'Uber Move', system-ui, sans-serif;
+  font-family: 'Roboto', system-ui, sans-serif;
+  font-weight: 300;
   color: var(--text);
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
@@ -98,8 +100,8 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 0.5rem;
   padding: 0.625rem 1.25rem;
   font-size: 0.875rem;
-  font-family: 'Uber Move', system-ui, sans-serif;
-  font-weight: 600;
+  font-family: 'Roboto', system-ui, sans-serif;
+  font-weight: 500;
   cursor: pointer;
   transition: background 0.15s, opacity 0.15s;
 }
@@ -113,8 +115,8 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 0.5rem;
   padding: 0.625rem 1.25rem;
   font-size: 0.875rem;
-  font-family: 'Uber Move', system-ui, sans-serif;
-  font-weight: 500;
+  font-family: 'Roboto', system-ui, sans-serif;
+  font-weight: 400;
   cursor: pointer;
   transition: background 0.15s;
 }
