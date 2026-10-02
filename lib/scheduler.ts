@@ -23,8 +23,10 @@ export async function scheduleCampaign(
 
   if (!campaign) throw new Error("Campaign not found");
 
-  let recipientIndex = 0;
   const recipients = campaign.recipients;
+  let recipientIndex = 0;
+
+  const updates: Promise<unknown>[] = [];
 
   for (const slot of schedules) {
     const [hours, minutes] = slot.time.split(":").map(Number);
@@ -36,14 +38,16 @@ export async function scheduleCampaign(
 
     for (const recipient of batch) {
       if (recipient.customer.smsOptOut) {
-        await prisma.campaignRecipient.update({
-          where: { id: recipient.id },
-          data: { status: "opted_out" },
-        });
-        await prisma.campaign.update({
-          where: { id: campaignId },
-          data: { optedOut: { increment: 1 }, pending: { decrement: 1 } },
-        });
+        updates.push(
+          prisma.campaignRecipient.update({
+            where: { id: recipient.id },
+            data: { status: "opted_out" },
+          }),
+          prisma.campaign.update({
+            where: { id: campaignId },
+            data: { optedOut: { increment: 1 }, pending: { decrement: 1 } },
+          })
+        );
         continue;
       }
 
@@ -52,19 +56,26 @@ export async function scheduleCampaign(
         recipient.customer.firstName
       );
 
-      await enqueueSMS({
-        customerId: recipient.customer.id,
-        phone: recipient.customer.phone,
-        message,
-        scheduledAt,
-        campaignId,
-      });
-
-      await prisma.campaignRecipient.update({
-        where: { id: recipient.id },
-        data: { status: "queued" },
-      });
+      updates.push(
+        enqueueSMS({
+          customerId: recipient.customer.id,
+          phone: recipient.customer.phone,
+          message,
+          scheduledAt,
+          campaignId,
+        }),
+        prisma.campaignRecipient.update({
+          where: { id: recipient.id },
+          data: { status: "queued" },
+        })
+      );
     }
+  }
+
+  // Execute all DB writes in parallel, in chunks of 20 to avoid overwhelming the connection pool
+  const chunkSize = 20;
+  for (let i = 0; i < updates.length; i += chunkSize) {
+    await Promise.all(updates.slice(i, i + chunkSize));
   }
 
   await prisma.campaign.update({

@@ -1,15 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyPassword, signToken, ensureAdminExists } from "@/lib/auth";
+import { verifyPassword, signToken } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
-  try {
-    await ensureAdminExists();
-  } catch (err) {
-    console.error("[login] ensureAdminExists failed:", err);
-    return NextResponse.json({ error: "Database not connected. Check DATABASE_URL." }, { status: 500 });
-  }
-
   let email: string, password: string;
   try {
     const body = await req.json();
@@ -46,6 +39,6 @@ export async function POST(req: NextRequest) {
     return res;
   } catch (err) {
     console.error("[login] error:", err);
-    return NextResponse.json({ error: "Server error. Check server logs." }, { status: 500 });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

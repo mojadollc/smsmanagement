@@ -36,17 +36,22 @@ export async function POST(req: NextRequest) {
 
   // Bulk import
   if (Array.isArray(body)) {
-    const results = await Promise.allSettled(
-      body.map((row: { firstName: string; lastName: string; phone: string; email?: string }) =>
-        prisma.customer.upsert({
-          where: { phone: row.phone },
-          update: {},
-          create: { firstName: row.firstName || "Unknown", lastName: row.lastName || row.phone, phone: row.phone, email: row.email || null },
-        })
-      )
-    );
-    const imported = results.filter((r) => r.status === "fulfilled").length;
-    const skipped = results.filter((r) => r.status === "rejected").length;
+    let imported = 0, skipped = 0;
+    for (const row of body) {
+      try {
+        await prisma.customer.create({
+          data: {
+            firstName: row.firstName || "Unknown",
+            lastName: row.lastName || row.phone,
+            phone: row.phone,
+            email: row.email || null,
+          },
+        });
+        imported++;
+      } catch {
+        skipped++; // duplicate or invalid
+      }
+    }
     return NextResponse.json({ imported, skipped });
   }
 

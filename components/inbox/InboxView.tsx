@@ -25,11 +25,13 @@ export default function InboxView() {
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    fetch("/api/conversations")
-      .then((r) => r.json())
-      .then(setConversations);
-  }, []);
+  async function load() {
+    const res = await fetch("/api/conversations?limit=30");
+    const data = await res.json();
+    setConversations(data.conversations ?? []);
+  }
+
+  useEffect(() => { load(); }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
