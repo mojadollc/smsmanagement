@@ -4,14 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && npm run build:workers",
+    "build:workers": "tsc --project tsconfig.worker.json",
     "start": "next start",
     "lint": "eslint",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
-    "worker": "ts-node --project tsconfig.worker.json worker/sms-worker.ts",
-    "scheduler": "ts-node --project tsconfig.worker.json worker/scheduler-worker.ts"
+    "worker": "node dist/worker/sms-worker.js",
+    "scheduler": "node dist/worker/scheduler-worker.js"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",

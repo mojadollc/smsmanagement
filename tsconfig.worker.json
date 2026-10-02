@@ -8,10 +8,8 @@
     "skipLibCheck": true,
     "outDir": "dist",
     "rootDir": ".",
-    "paths": {
-      "@/*": ["./*"]
-    }
+    "resolveJsonModule": true
   },
   "include": ["worker/**/*", "lib/**/*"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", ".next"]
 }

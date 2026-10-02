@@ -5,22 +5,26 @@ module.exports = {
       script: "node_modules/.bin/next",
       args: "start",
       env: { NODE_ENV: "production", PORT: 4000 },
+      max_restarts: 10,
+      restart_delay: 5000,
     },
     {
       name: "sms-worker",
-      script: "worker/sms-worker.ts",
+      script: "dist/worker/sms-worker.js",
       interpreter: "node",
-      interpreter_args: "--loader ts-node/esm",
       env: { NODE_ENV: "production" },
-      restart_delay: 5000,
+      max_restarts: 5,
+      restart_delay: 30000, // wait 30s between restarts — not a tight loop
+      cron_restart: "*/5 * * * *", // also restart every 5 min as a safety net
     },
     {
       name: "sms-scheduler",
-      script: "worker/scheduler-worker.ts",
+      script: "dist/worker/scheduler-worker.js",
       interpreter: "node",
-      interpreter_args: "--loader ts-node/esm",
       env: { NODE_ENV: "production" },
-      restart_delay: 5000,
+      max_restarts: 5,
+      restart_delay: 30000,
+      cron_restart: "*/5 * * * *",
     },
   ],
 };
