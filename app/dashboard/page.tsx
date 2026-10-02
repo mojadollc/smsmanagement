@@ -8,8 +8,8 @@ async function getStats() {
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const [sentToday, deliveredToday, failedToday, inboxUnread, recentConversations, activeCampaigns] =
-      await Promise.all([
+    const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000));
+    const query = Promise.all([
         prisma.message.count({ where: { direction: "outbound", createdAt: { gte: today } } }),
         prisma.message.count({ where: { direction: "outbound", status: "delivered", createdAt: { gte: today } } }),
         prisma.message.count({ where: { direction: "outbound", status: { in: ["failed", "undelivered"] }, createdAt: { gte: today } } }),
@@ -24,8 +24,12 @@ async function getStats() {
           orderBy: { createdAt: "desc" },
           take: 5,
         }),
-      ]);
-    return { sentToday, deliveredToday, failedToday, inboxUnread: inboxUnread._sum.unreadCount ?? 0, recentConversations, activeCampaigns };
+      ]).then(([sentToday, deliveredToday, failedToday, inboxUnread, recentConversations, activeCampaigns]) => ({
+        sentToday, deliveredToday, failedToday,
+        inboxUnread: inboxUnread._sum.unreadCount ?? 0,
+        recentConversations, activeCampaigns,
+      }));
+    return await Promise.race([query, timeout]);
   } catch {
     return null;
   }

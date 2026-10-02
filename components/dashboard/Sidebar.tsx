@@ -89,11 +89,15 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
+  const [userLoading, setUserLoading] = useState(true);
   const [showLogout, setShowLogout] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
-    fetch("/api/auth/me").then((r) => r.ok ? r.json() : null).then(setUser);
+    fetch("/api/auth/me")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { setUser(d); setUserLoading(false); })
+      .catch(() => setUserLoading(false));
   }, []);
 
   async function confirmLogout() {
@@ -161,7 +165,14 @@ export default function Sidebar() {
             </div>
           </div>
 
-          {user?.role === "admin" && (
+          {userLoading ? (
+            <div className="space-y-1 px-3">
+              <div className="h-3 w-16 rounded mb-2" style={{ background: "var(--sidebar-hover)" }} />
+              {[1, 2].map((i) => (
+                <div key={i} className="h-9 rounded-lg" style={{ background: "var(--sidebar-hover)", opacity: 0.4 }} />
+              ))}
+            </div>
+          ) : user?.role === "admin" ? (
             <div>
               <p className="text-xs font-semibold uppercase tracking-widest px-3 mb-2" style={{ color: "var(--sidebar-text)" }}>
                 Admin
@@ -188,7 +199,7 @@ export default function Sidebar() {
                 })}
               </div>
             </div>
-          )}
+          ) : null}
         </nav>
 
         {/* Bottom: theme toggle + user */}
