@@ -209,8 +209,8 @@ export default function InboxView() {
     // Detect new unread messages (but not on first load)
     if (!silent && prevTotal >= 0) {
       // Find conversations that have new unread messages (unread count increased)
-      const newUnreadConvos = convos.filter(c => {
-        const prev = conversations.find(p => p.id === c.id);
+      const newUnreadConvos = convos.filter((c: Conversation) => {
+        const prev = conversations.find((p: Conversation) => p.id === c.id);
         return c.unreadCount > 0 && (!prev || prev.unreadCount < c.unreadCount);
       });
       
