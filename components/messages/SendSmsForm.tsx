@@ -1,9 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import dynamic from "next/dynamic";
-
-const EmojiPicker = dynamic(() => import("@/components/ui/EmojiPicker"), { ssr: false });
+import { useState, useEffect } from "react";
 
 interface Customer { id: string; firstName: string; lastName: string; phone: string; }
 
@@ -13,8 +10,6 @@ export default function SendSmsForm() {
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [immediateEnabled, setImmediateEnabled] = useState<boolean | null>(null);
-  const [showEmoji, setShowEmoji] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     fetch("/api/settings")
@@ -46,10 +41,8 @@ export default function SendSmsForm() {
 
   if (!immediateEnabled) {
     return (
-      <div
-        className="max-w-lg flex items-start gap-3 px-4 py-4 rounded-xl"
-        style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}
-      >
+      <div className="max-w-lg flex items-start gap-3 px-4 py-4 rounded-xl"
+        style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>
         <svg className="w-5 h-5 shrink-0 mt-0.5" style={{ color: "#dc2626" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
         </svg>
@@ -67,12 +60,7 @@ export default function SendSmsForm() {
     <form onSubmit={send} className="max-w-lg space-y-4">
       <div>
         <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-2)" }}>Customer</label>
-        <select
-          required
-          className="input"
-          value={customerId}
-          onChange={(e) => setCustomerId(e.target.value)}
-        >
+        <select required className="input" value={customerId} onChange={(e) => setCustomerId(e.target.value)}>
           <option value="">Select customer...</option>
           {customers.map((c) => (
             <option key={c.id} value={c.id}>{c.firstName} {c.lastName} · {c.phone}</option>
@@ -88,56 +76,14 @@ export default function SendSmsForm() {
 
       <div>
         <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-2)" }}>Message</label>
-        <div className="relative">
-          <textarea
-            ref={textareaRef}
-            required
-            rows={4}
-            className="input resize-none"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Hi, are you still interested?"
-            style={{ paddingBottom: "2.5rem" }}
-          />
-          {/* Emoji button inside textarea */}
-          <div className="absolute bottom-2 left-2">
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setShowEmoji((v) => !v)}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-lg transition-all"
-                style={{
-                  background: showEmoji ? "var(--accent-soft)" : "transparent",
-                  transform: showEmoji ? "scale(1.15)" : "scale(1)",
-                  transition: "transform 0.15s ease, background 0.15s ease",
-                }}
-                title="Emoji"
-              >
-                😊
-              </button>
-              {showEmoji && (
-                <EmojiPicker
-                  onSelect={(emoji) => {
-                    const ta = textareaRef.current;
-                    if (ta) {
-                      const start = ta.selectionStart ?? message.length;
-                      const end = ta.selectionEnd ?? message.length;
-                      const next = message.slice(0, start) + emoji + message.slice(end);
-                      setMessage(next);
-                      setTimeout(() => {
-                        ta.focus();
-                        ta.setSelectionRange(start + emoji.length, start + emoji.length);
-                      }, 0);
-                    } else {
-                      setMessage((m) => m + emoji);
-                    }
-                  }}
-                  onClose={() => setShowEmoji(false)}
-                />
-              )}
-            </div>
-          </div>
-        </div>
+        <textarea
+          required
+          rows={4}
+          className="input resize-none"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="Hi, are you still interested?"
+        />
         <p className="text-xs mt-1" style={{ color: message.length > 160 ? "#dc2626" : "var(--text-3)" }}>{message.length}/160</p>
       </div>
 
