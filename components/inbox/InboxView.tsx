@@ -157,7 +157,18 @@ export default function InboxView() {
     const id = selectedIdRef.current;
     if (!id) return;
     const res = await fetch(`/api/conversations/${id}`);
-    if (res.ok) setSelected(await res.json());
+    if (res.ok) {
+      const data = await res.json();
+      setSelected(data);
+      // If any outbound messages are still queued/sent, poll Twilio for updates
+      const hasQueued = (data.messages ?? []).some(
+        (m: { direction: string; status: string }) =>
+          m.direction === "outbound" && ["queued", "sent", "sending"].includes(m.status)
+      );
+      if (hasQueued) {
+        fetch("/api/messages/sync-status", { method: "POST" }).catch(() => {});
+      }
+    }
   }
 
   useEffect(() => {

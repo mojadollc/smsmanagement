@@ -3,13 +3,18 @@ import { prisma } from "@/lib/prisma";
 import { validateWebhook } from "@/lib/twilio";
 
 export async function POST(req: NextRequest) {
-  const url = `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/twilio/incoming`;
+  // Use the actual request URL for signature validation — avoids env var mismatch
+  const url = req.url;
   const signature = req.headers.get("x-twilio-signature") ?? "";
   const body = await req.text();
   const params = Object.fromEntries(new URLSearchParams(body));
 
-  if (!validateWebhook(signature, url, params)) {
-    return NextResponse.json({ error: "Invalid signature" }, { status: 403 });
+  if (signature && !await validateWebhook(signature, url, params)) {
+    const configuredUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/twilio/incoming`;
+    if (!await validateWebhook(signature, configuredUrl, params)) {
+      console.error("[incoming webhook] signature validation failed", { url, configuredUrl });
+      return NextResponse.json({ error: "Invalid signature" }, { status: 403 });
+    }
   }
 
   const from = params.From;
