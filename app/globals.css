@@ -124,3 +124,45 @@ h1, h2, h3, h4, h5, h6 {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+
+/* ── Login Page Gradients & Animations ─────────────────────── */
+.gradient-bg-animated {
+  background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #43e97b, #38f9d7, #fa709a);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.orb-1 {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  animation: float 10s ease-in-out infinite;
+}
+
+.orb-2 {
+  background: linear-gradient(135deg, #f093fb, #fa709a);
+  animation: float 12s ease-in-out infinite reverse;
+}
+
+.orb-3 {
+  background: linear-gradient(135deg, #43e97b, #38f9d7);
+  animation: float 14s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -30px) scale(1.05); }
+  66% { transform: translate(-20px, 20px) scale(0.95); }
+}

@@ -42,7 +42,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="fixed inset-0 flex items-center justify-center p-4 relative overflow-hidden">
       {/* Full-screen animated gradient background - Suno style */}
       <div className="absolute inset-0 gradient-bg-animated" />
       
