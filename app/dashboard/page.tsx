@@ -10,12 +10,6 @@ interface Stats {
   failedToday: number;
   inboxUnread: number;
   dailyLimit: number;
-  recentConversations: {
-    id: string;
-    lastMessageAt: string | null;
-    customer: { firstName: string; lastName: string };
-    messages: { body: string }[];
-  }[];
   activeCampaigns: {
     id: string;
     name: string;
