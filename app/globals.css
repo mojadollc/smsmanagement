@@ -1,8 +1,5 @@
 @import "tailwindcss";
 
-/* ── Google Fonts - Roboto ──────────────────────────────────── */
-/* Roboto: Thin 100, ExtraLight 200, Light 300, Regular 400, Medium 500, Bold 700, Black 900 */
-
 /* ── Theme tokens ─────────────────────────────────────────── */
 :root {
   --bg:          #f8fafc;
@@ -48,22 +45,22 @@
   --sidebar-hover: #111827;
 }
 
-/* ── Base with Uber Move ───────────────────────────────────── */
+/* ── Base with Plus Jakarta Sans ───────────────────────────── */
 * { box-sizing: border-box; }
 
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: 'Roboto', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  font-weight: 300;
+  font-family: var(--font-jakarta), system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background 0.2s, color 0.2s;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Roboto', system-ui, sans-serif;
-  font-weight: 200;
+  font-family: var(--font-jakarta), system-ui, sans-serif;
+  font-weight: 600;
   letter-spacing: -0.01em;
 }
 
@@ -81,8 +78,8 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 0.5rem;
   padding: 0.625rem 0.875rem;
   font-size: 0.875rem;
-  font-family: 'Roboto', system-ui, sans-serif;
-  font-weight: 300;
+  font-family: var(--font-jakarta), system-ui, sans-serif;
+  font-weight: 400;
   color: var(--text);
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
@@ -100,7 +97,7 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 0.5rem;
   padding: 0.625rem 1.25rem;
   font-size: 0.875rem;
-  font-family: 'Roboto', system-ui, sans-serif;
+  font-family: var(--font-jakarta), system-ui, sans-serif;
   font-weight: 500;
   cursor: pointer;
   transition: background 0.15s, opacity 0.15s;
@@ -115,7 +112,7 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 0.5rem;
   padding: 0.625rem 1.25rem;
   font-size: 0.875rem;
-  font-family: 'Roboto', system-ui, sans-serif;
+  font-family: var(--font-jakarta), system-ui, sans-serif;
   font-weight: 400;
   cursor: pointer;
   transition: background 0.15s;
@@ -127,55 +124,3 @@ h1, h2, h3, h4, h5, h6 {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
-
-/* ── Animated Gradient Background (Suno style) ────────────── */
-@keyframes gradient-shift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-@keyframes gradient-rotate {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-@keyframes pulse-glow {
-  0%, 100% { opacity: 0.5; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.05); }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  33% { transform: translateY(-10px) rotate(1deg); }
-  66% { transform: translateY(5px) rotate(-1deg); }
-}
-
-.gradient-bg-animated {
-  background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #f5576c, #4facfe, #00f2fe, #43e97b, #38f9d7, #fa709a, #fee140);
-  background-size: 400% 400%;
-  animation: gradient-shift 15s ease infinite;
-}
-
-.glow-orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.6;
-  animation: pulse-glow 4s ease-in-out infinite;
-}
-
-.orb-1 {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  animation: float 8s ease-in-out infinite;
-}
-
-.orb-2 {
-  background: linear-gradient(135deg, #f093fb, #f5576c);
-  animation: float 10s ease-in-out infinite reverse;
-}
-
-.orb-3 {
-  background: linear-gradient(135deg, #4facfe, #00f2fe);
-  animation: float 12s ease-in-out infinite;
-}

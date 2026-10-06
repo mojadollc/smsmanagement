@@ -5,8 +5,21 @@ import { requireAdmin, hashPassword } from "@/lib/auth";
 export async function GET() {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  
   const users = await prisma.user.findMany({
-    select: { id: true, name: true, email: true, role: true, active: true, createdAt: true },
+    select: { 
+      id: true, 
+      name: true, 
+      email: true, 
+      role: true, 
+      active: true, 
+      createdAt: true,
+      lastLoginAt: true,
+      lastLoginIp: true,
+      loginCity: true,
+      loginRegion: true,
+      loginCountry: true,
+    },
     orderBy: { createdAt: "asc" },
   });
   return NextResponse.json(users);

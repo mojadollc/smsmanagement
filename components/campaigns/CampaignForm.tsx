@@ -18,7 +18,7 @@ export default function CampaignForm() {
   const [message, setMessage] = useState("");
   const [adminDailyLimit, setAdminDailyLimit] = useState(200);
   const [sendingMethods, setSendingMethods] = useState<SendingMethods>({ immediate: true, batch: true });
-  const [sendMethod, setSendMethod] = useState<"immediate" | "batch" | null>(null);
+  const [sendMethod, setSendMethod] = useState<"immediate" | "batch">("batch"); // Always batch for campaigns
   const [schedules, setSchedules] = useState<ScheduleSlot[]>([{ time: "09:00", count: 50 }]);
   const [submitting, setSubmitting] = useState(false);
   const [search, setSearch] = useState("");
@@ -32,8 +32,8 @@ export default function CampaignForm() {
         if (d.dailyLimit) setAdminDailyLimit(d.dailyLimit);
         const methods: SendingMethods = d.sendingMethods ?? { immediate: true, batch: true };
         setSendingMethods(methods);
-        if (methods.batch) setSendMethod("batch");
-        else if (methods.immediate) setSendMethod("immediate");
+        // Campaigns always use batch mode
+        setSendMethod("batch");
       });
 
     fetch("/api/customers?limit=500")
@@ -294,62 +294,24 @@ export default function CampaignForm() {
         )}
       </div>
 
-      {/* Sending Method */}
+      {/* Sending Method - Always Batch for Campaigns */}
       <div className="card p-5 space-y-4" style={{ background: "var(--bg-card)" }}>
-        <h2 className="font-semibold" style={{ color: "var(--text)" }}>Sending Method</h2>
-
-        {noMethodsEnabled ? (
-          <div
-            className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm"
-            style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", color: "#dc2626" }}
-          >
-            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            No sending methods are enabled. Contact your administrator.
-          </div>
-        ) : (
-          <div className={`grid gap-3 ${enabledCount === 2 ? "grid-cols-2" : "grid-cols-1"}`}>
-            {methodOptions
-              .filter((m) => sendingMethods[m.id])
-              .map((m) => {
-                const active = sendMethod === m.id;
-                return (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => setSendMethod(m.id)}
-                    className="text-left p-4 rounded-xl transition-all"
-                    style={{
-                      border: `2px solid ${active ? "var(--accent)" : "var(--border)"}`,
-                      background: active ? "var(--accent-soft)" : "var(--bg-subtle)",
-                    }}
-                  >
-                    <div
-                      className="w-9 h-9 rounded-lg flex items-center justify-center mb-2"
-                      style={{ background: m.iconBg, color: m.iconColor }}
-                    >
-                      {m.icon}
-                    </div>
-                    <p className="text-sm font-semibold" style={{ color: active ? "var(--accent-text)" : "var(--text)" }}>{m.label}</p>
-                    <p className="text-xs mt-0.5" style={{ color: "var(--text-3)" }}>{m.desc}</p>
-                  </button>
-                );
-              })}
-          </div>
-        )}
-
-        {sendMethod === "batch" && (
-          <div
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm"
-            style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", color: "#16a34a" }}
-          >
-            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Recommended — avoids carrier spam filters and looks natural
-          </div>
-        )}
+        <div className="flex items-center justify-between">
+          <h2 className="font-semibold" style={{ color: "var(--text)" }}>Sending Method</h2>
+          <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ background: "rgba(59,130,246,0.15)", color: "#2563eb" }}>Batch / Drip</span>
+        </div>
+        <p className="text-sm" style={{ color: "var(--text-2)" }}>
+          Campaigns are sent in batches throughout the day to avoid carrier spam filters and ensure delivery.
+        </p>
+        <div
+          className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm"
+          style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", color: "#16a34a" }}
+        >
+          <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Recommended — avoids carrier spam filters and looks natural
+        </div>
       </div>
 
       {/* Batch schedule */}

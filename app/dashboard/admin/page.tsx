@@ -2,7 +2,19 @@
 
 import { useState, useEffect } from "react";
 
-interface User { id: string; name: string; email: string; role: string; active: boolean; createdAt: string; }
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  active: boolean;
+  createdAt: string;
+  lastLoginAt: string | null;
+  lastLoginIp: string | null;
+  loginCity: string | null;
+  loginRegion: string | null;
+  loginCountry: string | null;
+}
 
 const EMPTY_ADD = { name: "", email: "", password: "", role: "agent" };
 const EMPTY_EDIT = { name: "", role: "agent", active: true, password: "" };
@@ -56,6 +68,19 @@ function Field({ label, children, hint }: { label: string; children: React.React
       {hint && <p className="text-xs mt-1" style={{ color: "var(--text-3)" }}>{hint}</p>}
     </div>
   );
+}
+
+function formatLocation(user: User): string | null {
+  const parts = [user.loginCity, user.loginRegion, user.loginCountry].filter(Boolean);
+  return parts.length > 0 ? parts.join(", ") : null;
+}
+
+function formatLastLogin(user: User): string {
+  if (!user.lastLoginAt) return "Never";
+  const date = new Date(user.lastLoginAt);
+  const location = formatLocation(user);
+  const ip = user.lastLoginIp || "";
+  return `${date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}${location ? ` · ${location}` : ""}${ip && ip !== "127.0.0.1" ? ` · ${ip}` : ""}`;
 }
 
 export default function AdminPage() {
@@ -139,7 +164,7 @@ export default function AdminPage() {
   const inputCls = "input text-sm";
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 max-w-5xl">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
@@ -198,7 +223,7 @@ export default function AdminPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ borderBottom: "1px solid var(--border)", background: "var(--bg-subtle)" }}>
-                  {["User", "Role", "Status", "Joined", "Actions"].map((h) => (
+                  {["User", "Role", "Status", "Last Login", "Actions"].map((h) => (
                     <th key={h} className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--text-3)" }}>
                       {h}
                     </th>
@@ -250,9 +275,14 @@ export default function AdminPage() {
                         {u.active ? "Active" : "Inactive"}
                       </span>
                     </td>
-                    {/* Joined */}
-                    <td className="px-5 py-3.5 text-xs" style={{ color: "var(--text-3)" }}>
-                      {new Date(u.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                    {/* Last Login */}
+                    <td className="px-5 py-3.5">
+                      <div className="min-w-0">
+                        <p className="text-xs" style={{ color: "var(--text-2)" }}>{formatLastLogin(u)}</p>
+                        {u.lastLoginIp && u.lastLoginIp !== "127.0.0.1" && (
+                          <p className="text-xs mt-0.5 font-mono" style={{ color: "var(--text-3)" }}>{u.lastLoginIp}</p>
+                        )}
+                      </div>
                     </td>
                     {/* Actions */}
                     <td className="px-5 py-3.5">
@@ -338,13 +368,20 @@ export default function AdminPage() {
                 {error}
               </div>
             )}
-            {/* Email read-only */}
-            <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg" style={{ background: "var(--bg-subtle)", border: "1px solid var(--border)" }}>
-              <Avatar name={editUser.name} email={editUser.email} />
-              <div>
-                <p className="text-sm font-medium" style={{ color: "var(--text)" }}>{editUser.name}</p>
-                <p className="text-xs" style={{ color: "var(--text-3)" }}>{editUser.email}</p>
+            {/* User info with location */}
+            <div className="px-3 py-3 rounded-lg" style={{ background: "var(--bg-subtle)", border: "1px solid var(--border)" }}>
+              <div className="flex items-center gap-3 mb-2">
+                <Avatar name={editUser.name} email={editUser.email} />
+                <div>
+                  <p className="text-sm font-medium" style={{ color: "var(--text)" }}>{editUser.name}</p>
+                  <p className="text-xs" style={{ color: "var(--text-3)" }}>{editUser.email}</p>
+                </div>
               </div>
+              {editUser.lastLoginAt && (
+                <div className="pt-2 mt-2" style={{ borderTop: "1px solid var(--border)" }}>
+                  <p className="text-xs" style={{ color: "var(--text-3)" }}>Last login: {formatLastLogin(editUser)}</p>
+                </div>
+              )}
             </div>
             <Field label="Full Name">
               <input required className={inputCls} value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
