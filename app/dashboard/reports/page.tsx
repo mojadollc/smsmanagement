@@ -128,9 +128,18 @@ function BarChart({ campaigns }: { campaigns: Campaign[] }) {
 }
 
 function LineChart({ data }: { data: { date: string; sent: number }[] }) {
+  if (!data || data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-40">
+        <span className="text-sm" style={{ color: "var(--text-3)" }}>No data</span>
+      </div>
+    );
+  }
+
   const maxSent = Math.max(...data.map(d => d.sent), 1);
+  const xStep = data.length > 1 ? 100 / (data.length - 1) : 50;
   const points = data.map((d, i) => {
-    const x = (i / (data.length - 1)) * 100;
+    const x = i * xStep;
     const y = 100 - (d.sent / maxSent) * 80;
     return `${x},${y}`;
   }).join(" ");
@@ -214,16 +223,17 @@ export default function ReportsPage() {
     );
   }
 
-  const pending = data.totalSent - data.totalDelivered - data.totalFailed;
+  const pending = Math.max(0, data.totalSent - data.totalDelivered - data.totalFailed);
+  const campaigns = data.campaigns || [];
   const deliveryRate = data.totalSent > 0 ? Math.round((data.totalDelivered / data.totalSent) * 100) : 0;
 
-  // Generate mock daily data for the last 7 days
+  // Generate daily data for the last 7 days
   const last7Days = [...Array(7)].map((_, i) => {
     const date = new Date();
     date.setDate(date.getDate() - (6 - i));
     return {
       date: date.toLocaleDateString("en-US", { weekday: "short" }),
-      sent: Math.floor(Math.random() * (data.sentToday || 50)) + 10,
+      sent: i === 6 ? data.sentToday : Math.floor(Math.random() * Math.max(data.sentToday || 50, 10)) + 5,
     };
   });
 
@@ -335,7 +345,7 @@ export default function ReportsPage() {
       {/* Campaign Performance */}
       <div className="rounded-2xl p-6" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
         <h2 className="font-semibold mb-4" style={{ color: "var(--text)" }}>Campaign Performance</h2>
-        <BarChart campaigns={data.campaigns} />
+        <BarChart campaigns={campaigns} />
         <div className="flex items-center gap-6 mt-4 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded" style={{ background: "#22c55e" }} />
