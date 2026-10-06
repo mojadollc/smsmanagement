@@ -60,8 +60,8 @@ const features = [
     color: "#ef4444",
     desc: "Send bulk SMS to hundreds of customers with smart batch scheduling to stay within carrier limits.",
     tips: [
-      "Set a daily limit to avoid carrier throttling",
-      "Use batch schedules to spread messages throughout the day",
+      "Use {firstName} in your message for personalization",
+      "Set a batch schedule to spread messages throughout the day",
       "Pause or cancel a running campaign at any time",
       "Track sent, delivered, and failed counts per campaign",
     ],
@@ -100,18 +100,6 @@ const features = [
       "See total messages sent, delivered, and failed",
       "Track opt-out rates to monitor list health",
       "Use data to optimize your send times and message content",
-    ],
-  },
-  {
-    icon: "⚙️",
-    title: "Settings",
-    href: "/dashboard/settings",
-    color: "#94a3b8",
-    desc: "Configure your Twilio credentials, daily sending limits, timezone, and app URL for webhooks.",
-    tips: [
-      "App URL must match your Twilio webhook URL exactly",
-      "Daily limit applies across all campaigns combined",
-      "Timezone affects when scheduled batches are sent",
     ],
   },
 ];

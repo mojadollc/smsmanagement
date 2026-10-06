@@ -6,33 +6,6 @@ import Link from "next/link";
 const steps = [
   {
     done: false,
-    icon: "⚙️",
-    title: "Configure Twilio Settings",
-    desc: "Add your Twilio Account SID, Auth Token, and Messaging Service SID.",
-    href: "/dashboard/settings",
-    linkLabel: "Go to Settings",
-    detail: [
-      "Log in to twilio.com/console",
-      "Copy your Account SID and Auth Token from the dashboard",
-      "Create a Messaging Service under Messaging → Services",
-      "Paste all three values into Settings → Twilio Configuration",
-    ],
-  },
-  {
-    done: false,
-    icon: "📞",
-    title: "Sync Your Phone Numbers",
-    desc: "Pull your Twilio phone numbers into the dashboard.",
-    href: "/dashboard/phone-numbers",
-    linkLabel: "Go to Phone Numbers",
-    detail: [
-      "Navigate to Phone Numbers in the sidebar",
-      "Click Sync from Twilio to import your numbers",
-      "Verify SMS and MMS are enabled on each number",
-    ],
-  },
-  {
-    done: false,
     icon: "👥",
     title: "Add Your First Customer",
     desc: "Import contacts manually or via CSV bulk upload.",
@@ -41,7 +14,8 @@ const steps = [
     detail: [
       "Click Add Customer and fill in name and phone number",
       "Or click Import CSV to upload hundreds at once",
-      "Make sure SMS Opt-In is enabled for each contact",
+      "Make sure phone numbers include country code (e.g. +1 for US)",
+      "Customers with SMS Opt-In enabled can receive messages",
     ],
   },
   {
@@ -60,17 +34,45 @@ const steps = [
   },
   {
     done: false,
+    icon: "💬",
+    title: "Reply to Conversations",
+    desc: "Manage two-way conversations in the Inbox.",
+    href: "/dashboard/inbox",
+    linkLabel: "Go to Inbox",
+    detail: [
+      "Inbox shows all conversations sorted by most recent",
+      "Click a conversation to view full message history",
+      "Type replies at the bottom and press Enter to send",
+      "You'll hear a sound when new messages arrive",
+    ],
+  },
+  {
+    done: false,
+    icon: "🗂️",
+    title: "Create a Group (Optional)",
+    desc: "Organize customers into Groups for targeted campaigns.",
+    href: "/dashboard/groups",
+    linkLabel: "Go to Groups",
+    detail: [
+      "Create groups like 'VIP Customers', 'New Leads', 'Inactive Users'",
+      "Add customers to a group from the Customers page",
+      "Select a group as recipients when creating a campaign",
+    ],
+  },
+  {
+    done: false,
     icon: "📢",
-    title: "Create a Campaign",
-    desc: "Send bulk SMS to a group of customers with scheduling.",
+    title: "Launch a Campaign",
+    desc: "Send bulk SMS to many customers with smart scheduling.",
     href: "/dashboard/campaigns",
     linkLabel: "Go to Campaigns",
     detail: [
       "Click New Campaign and give it a name",
-      "Write your message (use merge tags like {firstName})",
+      "Write your message (use {firstName} for personalization)",
       "Select recipients — individual customers or a Group",
       "Set a batch schedule (e.g. 50 messages at 9am, 50 at 11am)",
       "Click Schedule Campaign to activate",
+      "Monitor progress from the Campaigns page",
     ],
   },
   {
@@ -116,7 +118,7 @@ export default function OnboardingChecklist() {
         </div>
         {completed === steps.length && (
           <p className="text-sm font-medium mt-3 text-center" style={{ color: "#16a34a" }}>
-            🎉 You're all set! Your SMS Dashboard is fully configured.
+            🎉 You're all set! You know how to use the SMS Dashboard.
           </p>
         )}
       </div>
