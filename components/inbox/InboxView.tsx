@@ -18,6 +18,38 @@ interface Conversation {
   lastMessageAt: string;
 }
 
+// Play notification sound using Web Audio API
+function playNotificationSound() {
+  try {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    
+    // Create a pleasant two-tone notification
+    const playTone = (freq: number, startTime: number, duration: number) => {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = freq;
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime + startTime);
+      gainNode.gain.linearRampToValueAtTime(0.2, audioContext.currentTime + startTime + 0.02);
+      gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + startTime + duration);
+      
+      oscillator.start(audioContext.currentTime + startTime);
+      oscillator.stop(audioContext.currentTime + startTime + duration);
+    };
+    
+    // Two-tone notification (ding-dong style)
+    playTone(880, 0, 0.15);    // A5
+    playTone(1108, 0.15, 0.2); // C#6
+  } catch (e) {
+    console.log('Audio not supported');
+  }
+}
+
 function formatTime(dateStr: string) {
   const date = new Date(dateStr);
   const now = new Date();
@@ -113,11 +145,58 @@ export default function InboxView() {
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const selectedIdRef = useRef<string | null>(null);
+  const prevUnreadRef = useRef<number>(-1);
+  const originalTitleRef = useRef<string>("");
+
+  // Initialize and request notification permission
+  useEffect(() => {
+    originalTitleRef.current = document.title;
+    
+    // Request notification permission
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+    
+    return () => {
+      document.title = originalTitleRef.current;
+    };
+  }, []);
 
   // Keep ref in sync with selected state
   useEffect(() => {
     selectedIdRef.current = selected?.id ?? null;
   }, [selected?.id]);
+
+  // Update document title when there are unread messages
+  useEffect(() => {
+    const totalUnread = conversations.reduce((acc, c) => acc + c.unreadCount, 0);
+    
+    if (totalUnread > 0) {
+      // Find the most recent unread conversation
+      const unreadConv = conversations.find(c => c.unreadCount > 0);
+      if (unreadConv) {
+        document.title = `(${totalUnread}) ${unreadConv.customer.phone} - SMS Dashboard`;
+      }
+    } else {
+      document.title = originalTitleRef.current || "SMS Dashboard";
+    }
+  }, [conversations]);
+
+  // Play sound and show notification for new messages
+  function notifyNewMessage(phone: string, message: string) {
+    // Play sound
+    playNotificationSound();
+    
+    // Show browser notification
+    if ("Notification" in window && Notification.permission === "granted") {
+      new Notification(`New message from ${phone}`, {
+        body: message,
+        icon: "/icons/icon-192x192.png",
+        tag: "sms-inbound",
+        requireInteraction: true,
+      });
+    }
+  }
 
   async function load(silent = false) {
     const res = await fetch("/api/conversations?limit=50");
@@ -125,12 +204,28 @@ export default function InboxView() {
     const convos = data.conversations ?? [];
     
     const totalUnread = convos.reduce((acc: number, c: Conversation) => acc + c.unreadCount, 0);
-    const prevTotal = conversations.reduce((acc, c) => acc + c.unreadCount, 0);
+    const prevTotal = prevUnreadRef.current;
     
-    if (!silent && totalUnread > prevTotal && prevTotal > 0) {
-      setHasNewMessage(true);
-      setTimeout(() => setHasNewMessage(false), 3000);
+    // Detect new unread messages (but not on first load)
+    if (!silent && totalUnread > prevTotal && prevTotal >= 0) {
+      // Find conversations that have new unread messages
+      const newUnreadConvos = convos.filter(c => {
+        const prev = conversations.find(p => p.id === c.id);
+        return c.unreadCount > 0 && (!prev || prev.unreadCount < c.unreadCount);
+      });
+      
+      if (newUnreadConvos.length > 0) {
+        setHasNewMessage(true);
+        setTimeout(() => setHasNewMessage(false), 3000);
+        
+        // Notify for the first new message
+        const conv = newUnreadConvos[0];
+        const lastMsg = conv.messages?.[0];
+        notifyNewMessage(conv.customer.phone, lastMsg?.body || "New message");
+      }
     }
+    
+    prevUnreadRef.current = totalUnread;
     
     // Sort conversations by lastMessageAt (most recent first)
     const sorted = [...convos].sort((a, b) => {
