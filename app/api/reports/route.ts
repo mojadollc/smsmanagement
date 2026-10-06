@@ -6,35 +6,59 @@ export async function GET() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const [sentToday, deliveredToday, failedToday, inboxUnread, recentConversations, activeCampaigns, settingsRows] =
-      await Promise.all([
-        prisma.message.count({ where: { direction: "outbound", createdAt: { gte: today } } }),
-        prisma.message.count({ where: { direction: "outbound", status: "delivered", createdAt: { gte: today } } }),
-        prisma.message.count({ where: { direction: "outbound", status: { in: ["failed", "undelivered"] }, createdAt: { gte: today } } }),
-        prisma.conversation.aggregate({ _sum: { unreadCount: true } }),
-        prisma.conversation.findMany({
-          take: 5,
-          orderBy: { lastMessageAt: "desc" },
-          include: { customer: true, messages: { orderBy: { createdAt: "desc" }, take: 1 } },
-        }),
-        prisma.campaign.findMany({
-          where: { status: { in: ["scheduled", "running"] } },
-          orderBy: { createdAt: "desc" },
-          take: 5,
-        }),
-        prisma.$queryRaw<{ dailyLimit: number }[]>`SELECT "dailyLimit" FROM "Settings" WHERE id = 'singleton' LIMIT 1`.catch(() => []),
-      ]);
-
-    return NextResponse.json({
+    const [
+      totalSent,
+      totalDelivered,
+      totalFailed,
+      totalOptOuts,
       sentToday,
       deliveredToday,
-      failedToday,
-      inboxUnread: inboxUnread._sum.unreadCount ?? 0,
-      recentConversations,
-      activeCampaigns,
+      campaigns,
+      settingsRows,
+    ] = await Promise.all([
+      prisma.message.count({ where: { direction: "outbound" } }),
+      prisma.message.count({ where: { direction: "outbound", status: "delivered" } }),
+      prisma.message.count({ where: { direction: "outbound", status: { in: ["failed", "undelivered"] } } }),
+      prisma.customer.count({ where: { smsOptOut: true } }),
+      prisma.message.count({ where: { direction: "outbound", createdAt: { gte: today } } }),
+      prisma.message.count({ where: { direction: "outbound", status: "delivered", createdAt: { gte: today } } }),
+      prisma.campaign.findMany({
+        orderBy: { createdAt: "desc" },
+        take: 10,
+        select: {
+          id: true,
+          name: true,
+          totalCount: true,
+          sent: true,
+          delivered: true,
+          failed: true,
+          optedOut: true,
+          status: true,
+        },
+      }),
+      prisma.$queryRaw<{ dailyLimit: number }[]>`SELECT "dailyLimit" FROM "Settings" WHERE id = 'singleton' LIMIT 1`.catch(() => []),
+    ]);
+
+    return NextResponse.json({
+      totalSent,
+      totalDelivered,
+      totalFailed,
+      totalOptOuts,
+      sentToday,
+      deliveredToday,
       dailyLimit: settingsRows[0]?.dailyLimit ?? 200,
+      campaigns,
     });
   } catch {
-    return NextResponse.json({ sentToday: 0, deliveredToday: 0, failedToday: 0, inboxUnread: 0, recentConversations: [], activeCampaigns: [], dailyLimit: 200 });
+    return NextResponse.json({
+      totalSent: 0,
+      totalDelivered: 0,
+      totalFailed: 0,
+      totalOptOuts: 0,
+      sentToday: 0,
+      deliveredToday: 0,
+      dailyLimit: 200,
+      campaigns: [],
+    });
   }
 }
