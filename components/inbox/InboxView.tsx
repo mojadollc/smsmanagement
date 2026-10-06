@@ -450,14 +450,14 @@ export default function InboxView() {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4" style={{ background: "var(--bg)" }}>
-              {selected.messages.length === 0 ? (
+              {(selected.messages ?? []).length === 0 ? (
                 <div className="flex items-center justify-center h-full">
                   <p style={{ color: "var(--text-3)" }}>No messages yet</p>
                 </div>
               ) : (
-                selected.messages.map((msg, idx) => {
+                (selected.messages ?? []).map((msg, idx) => {
                   const isOutbound = msg.direction === "outbound";
-                  const showAvatar = idx === 0 || selected.messages[idx - 1].direction !== msg.direction;
+                  const showAvatar = idx === 0 || (selected.messages ?? [])[idx - 1]?.direction !== msg.direction;
                   
                   return (
                     <div key={msg.id} className={`flex items-end gap-2 ${isOutbound ? "justify-end" : "justify-start"}`}>
