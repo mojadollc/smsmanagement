@@ -207,14 +207,14 @@ export default function InboxView() {
     const prevTotal = prevUnreadRef.current;
     
     // Detect new unread messages (but not on first load)
-    if (!silent && totalUnread > prevTotal && prevTotal >= 0) {
-      // Find conversations that have new unread messages
+    if (!silent && prevTotal >= 0) {
+      // Find conversations that have new unread messages (unread count increased)
       const newUnreadConvos = convos.filter(c => {
         const prev = conversations.find(p => p.id === c.id);
         return c.unreadCount > 0 && (!prev || prev.unreadCount < c.unreadCount);
       });
       
-      if (newUnreadConvos.length > 0) {
+      if (newUnreadConvos.length > 0 && totalUnread > prevTotal) {
         setHasNewMessage(true);
         setTimeout(() => setHasNewMessage(false), 3000);
         
@@ -228,6 +228,7 @@ export default function InboxView() {
     prevUnreadRef.current = totalUnread;
     
     // Sort conversations by lastMessageAt (most recent first)
+    // The API already returns them sorted, but we ensure it here
     const sorted = [...convos].sort((a, b) => {
       const dateA = new Date(a.lastMessageAt || 0).getTime();
       const dateB = new Date(b.lastMessageAt || 0).getTime();
