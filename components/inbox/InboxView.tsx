@@ -53,23 +53,57 @@ function getRandomColor(phone: string) {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const config: Record<string, { bg: string; color: string }> = {
-    delivered: { bg: "rgba(34, 197, 94, 0.15)", color: "#16a34a" },
-    sent: { bg: "rgba(59, 130, 246, 0.15)", color: "#2563eb" },
-    pending: { bg: "rgba(234, 179, 8, 0.15)", color: "#ca8a04" },
-    failed: { bg: "rgba(239, 68, 68, 0.15)", color: "#dc2626" },
-    queued: { bg: "rgba(156, 163, 175, 0.15)", color: "#6b7280" },
-    undelivered: { bg: "rgba(239, 68, 68, 0.15)", color: "#dc2626" },
-    read: { bg: "rgba(34, 197, 94, 0.15)", color: "#16a34a" },
+  const config: Record<string, { bg: string; color: string; icon: React.ReactNode }> = {
+    delivered: { 
+      bg: "rgba(34, 197, 94, 0.15)", 
+      color: "#16a34a",
+      icon: <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+    },
+    sent: { 
+      bg: "rgba(59, 130, 246, 0.15)", 
+      color: "#2563eb",
+      icon: <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+    },
+    pending: { 
+      bg: "rgba(234, 179, 8, 0.15)", 
+      color: "#ca8a04",
+      icon: <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+    },
+    failed: { 
+      bg: "rgba(239, 68, 68, 0.15)", 
+      color: "#dc2626",
+      icon: <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+    },
+    queued: { 
+      bg: "rgba(156, 163, 175, 0.15)", 
+      color: "#6b7280",
+      icon: <svg className="w-3 h-3 animate-pulse" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" /></svg>
+    },
+    undelivered: { 
+      bg: "rgba(239, 68, 68, 0.15)", 
+      color: "#dc2626",
+      icon: <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+    },
+    undelivered: { 
+      bg: "rgba(239, 68, 68, 0.15)", 
+      color: "#dc2626",
+      icon: <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+    },
+    read: { 
+      bg: "rgba(34, 197, 94, 0.15)", 
+      color: "#16a34a",
+      icon: <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" /></svg>
+    },
   };
 
   const conf = config[status] || config.pending;
 
   return (
     <span
-      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium"
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium transition-all"
       style={{ background: conf.bg, color: conf.color }}
     >
+      {conf.icon}
       {status}
     </span>
   );
@@ -105,23 +139,32 @@ export default function InboxView() {
     });
     
     setConversations(sorted);
-    
-    // If selected conversation exists, update it with new messages
-    if (selected) {
-      const updatedSelected = sorted.find(c => c.id === selected.id);
-      if (updatedSelected) {
-        const res = await fetch(`/api/conversations/${selected.id}`);
-        const fullData = await res.json();
-        setSelected(fullData);
-      }
+  }
+  
+  // Separate function to refresh selected conversation (for status updates)
+  async function refreshSelectedConversation() {
+    if (!selected) return;
+    const res = await fetch(`/api/conversations/${selected.id}`);
+    if (res.ok) {
+      const data = await res.json();
+      setSelected(data);
     }
   }
 
   useEffect(() => { 
     load(); 
     const interval = setInterval(() => load(true), 3000);
-    return () => clearInterval(interval);
+    const statusInterval = setInterval(() => refreshSelectedConversation(), 2000);
+    return () => {
+      clearInterval(interval);
+      clearInterval(statusInterval);
+    };
   }, []);
+  
+  // Refresh selected conversation when it changes
+  useEffect(() => {
+    refreshSelectedConversation();
+  }, [selected?.id]);
 
   useEffect(() => {
     if (selected?.messages?.length) {
