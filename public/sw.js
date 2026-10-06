@@ -4,12 +4,7 @@ const CACHE_NAME = 'sms-dashboard-v1';
 const OFFLINE_URL = '/offline';
 
 const STATIC_ASSETS = [
-  '/',
-  '/dashboard',
-  '/login',
   '/manifest.json',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png',
 ];
 
 // Install event - cache static assets

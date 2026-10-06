@@ -72,17 +72,9 @@ export default function EmojiPicker({ onSelect, onClose }: EmojiPickerProps) {
     onSelect(emoji);
   }
 
-  const filtered = search.trim()
-    ? CATEGORIES.flatMap((c) => c.emojis).filter((e) => {
-        // simple search by unicode name isn't available, so just show all on search
-        return true;
-      }).slice(0, 80)
-    : CATEGORIES[activeCategory].emojis;
-
-  // For search, filter by showing emojis that match typed text loosely
   const displayEmojis = search.trim()
-    ? CATEGORIES.flatMap((c) => c.emojis)
-    : CATEGORIES[activeCategory].emojis;
+    ? CATEGORIES.flatMap((c) => c.emojis).slice(0, 80)
+    : CATEGORIES[activeCategory]?.emojis ?? [];
 
   return (
     <div
