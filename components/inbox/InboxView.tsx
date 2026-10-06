@@ -112,6 +112,12 @@ export default function InboxView() {
   const [searchQuery, setSearchQuery] = useState("");
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const selectedIdRef = useRef<string | null>(null);
+
+  // Keep ref in sync with selected state
+  useEffect(() => {
+    selectedIdRef.current = selected?.id ?? null;
+  }, [selected?.id]);
 
   async function load(silent = false) {
     const res = await fetch("/api/conversations?limit=50");
@@ -136,10 +142,12 @@ export default function InboxView() {
     setConversations(sorted);
   }
   
-  // Separate function to refresh selected conversation (for status updates)
+  // Refresh selected conversation for status updates - uses ref to get current ID
   async function refreshSelectedConversation() {
-    if (!selected) return;
-    const res = await fetch(`/api/conversations/${selected.id}`);
+    const id = selectedIdRef.current;
+    if (!id) return;
+    
+    const res = await fetch(`/api/conversations/${id}`);
     if (res.ok) {
       const data = await res.json();
       setSelected(data);
@@ -149,17 +157,12 @@ export default function InboxView() {
   useEffect(() => { 
     load(); 
     const interval = setInterval(() => load(true), 3000);
-    const statusInterval = setInterval(() => refreshSelectedConversation(), 2000);
+    const statusInterval = setInterval(refreshSelectedConversation, 2000);
     return () => {
       clearInterval(interval);
       clearInterval(statusInterval);
     };
   }, []);
-  
-  // Refresh selected conversation when it changes
-  useEffect(() => {
-    refreshSelectedConversation();
-  }, [selected?.id]);
 
   useEffect(() => {
     if (selected?.messages?.length) {
