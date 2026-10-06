@@ -196,7 +196,7 @@ export default function InboxView() {
     if ("Notification" in window && Notification.permission === "granted") {
       new Notification(`New message from ${phone}`, {
         body: message,
-        icon: "/icons/icon-192x192.png",
+        icon: "/icons/icon.svg",
         tag: "sms-inbound",
         requireInteraction: true,
       });

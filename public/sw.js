@@ -97,8 +97,8 @@ self.addEventListener('push', (event) => {
   const title = data.title || 'SMS Dashboard';
   const options = {
     body: data.body || 'You have a new message',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-72x72.png',
+    icon: '/icons/icon.svg',
+    badge: '/icons/icon.svg',
     vibrate: [100, 50, 100],
     data: {
       dateOfArrival: Date.now(),
