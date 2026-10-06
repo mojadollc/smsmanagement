@@ -1,6 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
+
+const EmojiPicker = dynamic(() => import("@/components/ui/EmojiPicker"), { ssr: false });
 
 interface Customer { id: string; firstName: string; lastName: string; phone: string; }
 
@@ -9,7 +12,9 @@ export default function SendSmsForm() {
   const [customerId, setCustomerId] = useState("");
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
-  const [immediateEnabled, setImmediateEnabled] = useState<boolean | null>(null); // null = loading
+  const [immediateEnabled, setImmediateEnabled] = useState<boolean | null>(null);
+  const [showEmoji, setShowEmoji] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     fetch("/api/settings")
@@ -83,14 +88,56 @@ export default function SendSmsForm() {
 
       <div>
         <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-2)" }}>Message</label>
-        <textarea
-          required
-          rows={4}
-          className="input resize-none"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="Hi, are you still interested?"
-        />
+        <div className="relative">
+          <textarea
+            ref={textareaRef}
+            required
+            rows={4}
+            className="input resize-none"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Hi, are you still interested?"
+            style={{ paddingBottom: "2.5rem" }}
+          />
+          {/* Emoji button inside textarea */}
+          <div className="absolute bottom-2 left-2">
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowEmoji((v) => !v)}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-lg transition-all"
+                style={{
+                  background: showEmoji ? "var(--accent-soft)" : "transparent",
+                  transform: showEmoji ? "scale(1.15)" : "scale(1)",
+                  transition: "transform 0.15s ease, background 0.15s ease",
+                }}
+                title="Emoji"
+              >
+                😊
+              </button>
+              {showEmoji && (
+                <EmojiPicker
+                  onSelect={(emoji) => {
+                    const ta = textareaRef.current;
+                    if (ta) {
+                      const start = ta.selectionStart ?? message.length;
+                      const end = ta.selectionEnd ?? message.length;
+                      const next = message.slice(0, start) + emoji + message.slice(end);
+                      setMessage(next);
+                      setTimeout(() => {
+                        ta.focus();
+                        ta.setSelectionRange(start + emoji.length, start + emoji.length);
+                      }, 0);
+                    } else {
+                      setMessage((m) => m + emoji);
+                    }
+                  }}
+                  onClose={() => setShowEmoji(false)}
+                />
+              )}
+            </div>
+          </div>
+        </div>
         <p className="text-xs mt-1" style={{ color: message.length > 160 ? "#dc2626" : "var(--text-3)" }}>{message.length}/160</p>
       </div>
 

@@ -31,96 +31,116 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
   );
 }
 
-function SaveBar({ status, disabled }: { status: string; disabled: boolean }) {
-  return (
-    <div className="flex items-center gap-4 pt-2">
-      <button type="submit" disabled={disabled} className="btn-primary px-6 py-2.5">
-        {status === "saving" ? "Saving..." : "Save Changes"}
-      </button>
-      {status === "saved" && (
-        <span className="flex items-center gap-1.5 text-sm font-medium" style={{ color: "#16a34a" }}>
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
-          Saved successfully
-        </span>
-      )}
-      {status === "error" && (
-        <span className="text-sm" style={{ color: "#dc2626" }}>Failed to save. Try again.</span>
-      )}
-    </div>
-  );
-}
-
 export default function SettingsPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [profileForm, setProfileForm] = useState({ name: "", email: "", currentPassword: "", newPassword: "" });
-  const [profileStatus, setProfileStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [form, setForm] = useState({ name: "", currentPassword: "", newPassword: "" });
+  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     fetch("/api/auth/me").then((r) => r.ok ? r.json() : null).then((d) => {
       if (d) {
         setProfile(d);
-        setProfileForm({ name: d.name || "", email: d.email || "", currentPassword: "", newPassword: "" });
+        setForm((prev) => ({ ...prev, name: d.name || "" }));
       }
     });
   }, []);
 
-  async function saveProfile(e: React.FormEvent) {
+  async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    setProfileStatus("saving");
+    setStatus("saving");
+    setErrorMsg("");
+    const body: Record<string, string> = { name: form.name };
+    if (form.newPassword) {
+      body.currentPassword = form.currentPassword;
+      body.newPassword = form.newPassword;
+    }
     const res = await fetch("/api/user/update", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(profileForm),
+      body: JSON.stringify(body),
     });
     const data = await res.json();
     if (res.ok) {
-      setProfileStatus("saved");
-      if (data.user) {
-        setProfile(data.user);
-        setProfileForm(prev => ({ ...prev, currentPassword: "", newPassword: "" }));
-      }
+      setStatus("saved");
+      if (data.user) setProfile(data.user);
+      setForm((prev) => ({ ...prev, currentPassword: "", newPassword: "" }));
     } else {
-      setProfileStatus("error");
+      setStatus("error");
+      setErrorMsg(data.error || "Failed to save");
     }
-    setTimeout(() => setProfileStatus("idle"), 3000);
+    setTimeout(() => setStatus("idle"), 3000);
   }
 
+  if (!profile) return null;
+
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6 max-w-lg">
       <div>
-        <h1 className="text-2xl font-bold" style={{ color: "var(--text)" }}>Settings</h1>
-        <p className="text-sm mt-0.5" style={{ color: "var(--text-2)" }}>Manage your account preferences</p>
+        <h1 className="text-2xl font-bold" style={{ color: "var(--text)" }}>My Profile</h1>
+        <p className="text-sm mt-0.5" style={{ color: "var(--text-2)" }}>Update your name and password</p>
       </div>
 
-      {profile && (
-        <form onSubmit={saveProfile} className="space-y-4">
-          <SectionCard title="Profile Settings" desc="Update your account information and password.">
-            <Field label="Name">
-              <input className="input" value={profileForm.name} onChange={(e) => setProfileForm(prev => ({ ...prev, name: e.target.value }))} />
-            </Field>
-            <Field label="Email">
-              <input type="email" className="input" value={profileForm.email} onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))} />
-            </Field>
-            <Field label="Role">
-              <input className="input" value={profile.role === "admin" ? "Administrator" : "Agent"} disabled style={{ opacity: 0.6, cursor: "not-allowed" }} />
-            </Field>
+      <form onSubmit={handleSave}>
+        <SectionCard title="Account Settings">
+          <Field label="Full Name">
+            <input
+              className="input"
+              value={form.name}
+              onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+              required
+            />
+          </Field>
+          <Field label="Email">
+            <input className="input" value={profile.email} disabled style={{ opacity: 0.6, cursor: "not-allowed" }} />
+          </Field>
+          <Field label="Role">
+            <input className="input" value={profile.role === "admin" ? "Administrator" : "Agent"} disabled style={{ opacity: 0.6, cursor: "not-allowed" }} />
+          </Field>
 
-            <div style={{ borderTop: "1px solid var(--border)", paddingTop: "1rem", marginTop: "1rem" }}>
-              <p className="font-medium mb-4" style={{ color: "var(--text)" }}>Change Password</p>
-              <Field label="Current Password" hint="Required to change your password.">
-                <input type="password" className="input" value={profileForm.currentPassword} onChange={(e) => setProfileForm(prev => ({ ...prev, currentPassword: e.target.value }))} placeholder="Enter current password" />
+          <div style={{ borderTop: "1px solid var(--border)", paddingTop: "1rem", marginTop: "0.5rem" }}>
+            <p className="font-medium mb-4 text-sm" style={{ color: "var(--text)" }}>Change Password</p>
+            <div className="space-y-4">
+              <Field label="Current Password" hint="Required only if changing password">
+                <input
+                  type="password"
+                  className="input"
+                  value={form.currentPassword}
+                  onChange={(e) => setForm((p) => ({ ...p, currentPassword: e.target.value }))}
+                  placeholder="Enter current password"
+                />
               </Field>
-              <Field label="New Password" hint="Must be at least 8 characters.">
-                <input type="password" className="input" value={profileForm.newPassword} onChange={(e) => setProfileForm(prev => ({ ...prev, newPassword: e.target.value }))} placeholder="Enter new password" />
+              <Field label="New Password" hint="Minimum 8 characters">
+                <input
+                  type="password"
+                  className="input"
+                  value={form.newPassword}
+                  onChange={(e) => setForm((p) => ({ ...p, newPassword: e.target.value }))}
+                  placeholder="Enter new password"
+                />
               </Field>
             </div>
+          </div>
 
-            <SaveBar status={profileStatus} disabled={profileStatus === "saving"} />
-          </SectionCard>
-        </form>
-      )}
+          {errorMsg && (
+            <p className="text-sm" style={{ color: "#dc2626" }}>{errorMsg}</p>
+          )}
+
+          <div className="flex items-center gap-4 pt-1">
+            <button type="submit" disabled={status === "saving"} className="btn-primary px-6 py-2.5">
+              {status === "saving" ? "Saving..." : "Save Changes"}
+            </button>
+            {status === "saved" && (
+              <span className="flex items-center gap-1.5 text-sm font-medium" style={{ color: "#16a34a" }}>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                Saved
+              </span>
+            )}
+          </div>
+        </SectionCard>
+      </form>
     </div>
   );
 }

@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
+
+const EmojiPicker = dynamic(() => import("@/components/ui/EmojiPicker"), { ssr: false });
 
 interface Message {
   id: string;
@@ -143,7 +146,9 @@ export default function InboxView() {
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [hasNewMessage, setHasNewMessage] = useState(false);
+  const [showEmoji, setShowEmoji] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const selectedIdRef = useRef<string | null>(null);
   const prevUnreadRef = useRef<number>(-1);
   const originalTitleRef = useRef<string>("");
@@ -497,7 +502,46 @@ export default function InboxView() {
             {/* Reply Input */}
             <div className="px-6 py-4 border-t" style={{ borderColor: "var(--border)", background: "var(--bg-card)" }}>
               <div className="flex items-end gap-3 p-2 rounded-2xl" style={{ background: "var(--bg-subtle)" }}>
+                {/* Emoji button */}
+                <div className="relative shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setShowEmoji((v) => !v)}
+                    className="w-9 h-9 rounded-xl flex items-center justify-center text-xl transition-all"
+                    style={{
+                      background: showEmoji ? "var(--accent-soft)" : "transparent",
+                      color: showEmoji ? "var(--accent)" : "var(--text-3)",
+                      transform: showEmoji ? "scale(1.1)" : "scale(1)",
+                      transition: "transform 0.15s ease, background 0.15s ease",
+                    }}
+                    title="Emoji"
+                  >
+                    😊
+                  </button>
+                  {showEmoji && (
+                    <EmojiPicker
+                      onSelect={(emoji) => {
+                        const ta = textareaRef.current;
+                        if (ta) {
+                          const start = ta.selectionStart ?? reply.length;
+                          const end = ta.selectionEnd ?? reply.length;
+                          const next = reply.slice(0, start) + emoji + reply.slice(end);
+                          setReply(next);
+                          setTimeout(() => {
+                            ta.focus();
+                            ta.setSelectionRange(start + emoji.length, start + emoji.length);
+                          }, 0);
+                        } else {
+                          setReply((r) => r + emoji);
+                        }
+                      }}
+                      onClose={() => setShowEmoji(false)}
+                    />
+                  )}
+                </div>
+
                 <textarea
+                  ref={textareaRef}
                   value={reply}
                   onChange={(e) => setReply(e.target.value)}
                   onKeyDown={(e) => {
@@ -508,7 +552,7 @@ export default function InboxView() {
                   }}
                   placeholder="Type a message..."
                   rows={1}
-                  className="flex-1 px-4 py-2.5 text-sm resize-none focus:outline-none"
+                  className="flex-1 px-2 py-2.5 text-sm resize-none focus:outline-none"
                   style={{ background: "transparent", color: "var(--text)", maxHeight: "120px" }}
                 />
                 <button
