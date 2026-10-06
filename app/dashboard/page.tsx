@@ -23,6 +23,12 @@ interface Stats {
     sent: number;
     totalCount: number;
   }[];
+  recentConversations: {
+    id: string;
+    lastMessageAt: string | null;
+    customer: { firstName: string; lastName: string };
+    messages: { body: string }[];
+  }[];
 }
 
 const statusColors: Record<string, { bg: string; text: string }> = {
@@ -38,12 +44,22 @@ export default function DashboardPage() {
 
   useEffect(() => {
     let mounted = true;
-    fetch("/api/reports")
-      .then((r) => r.ok ? r.json() : null)
-      .then((d) => {
-        if (mounted) setStats(d);
-      })
-      .catch(() => {});
+    Promise.all([
+      fetch("/api/reports").then((r) => r.ok ? r.json() : null),
+      fetch("/api/conversations?limit=5").then((r) => r.ok ? r.json() : null),
+    ]).then(([reports, convos]) => {
+      if (mounted && reports) {
+        setStats({
+          ...reports,
+          failedToday: reports.totalFailed ?? 0,
+          inboxUnread: convos?.conversations?.reduce((a: number, c: any) => a + (c.unreadCount ?? 0), 0) ?? 0,
+          activeCampaigns: (reports.campaigns ?? []).filter((c: any) =>
+            ["running", "scheduled", "paused"].includes(c.status)
+          ),
+          recentConversations: convos?.conversations ?? [],
+        });
+      }
+    }).catch(() => {});
     return () => { mounted = false; };
   }, []);
 
@@ -127,11 +143,11 @@ export default function DashboardPage() {
             <h2 className="font-semibold" style={{ color: "var(--text)" }}>Active Campaigns</h2>
             <Link href="/dashboard/campaigns" className="text-xs font-medium" style={{ color: "var(--accent)" }}>View all →</Link>
           </div>
-          {stats.activeCampaigns.length === 0 ? (
+          {(stats.activeCampaigns ?? []).length === 0 ? (
             <p className="text-sm py-6 text-center" style={{ color: "var(--text-3)" }}>No active campaigns</p>
           ) : (
             <div className="space-y-3">
-              {stats.activeCampaigns.map((c) => {
+              {(stats.activeCampaigns ?? []).map((c) => {
                 const sc = statusColors[c.status] ?? statusColors.paused;
                 return (
                   <div key={c.id} className="flex justify-between items-center">
@@ -152,11 +168,11 @@ export default function DashboardPage() {
             <h2 className="font-semibold" style={{ color: "var(--text)" }}>Recent Conversations</h2>
             <Link href="/dashboard/inbox" className="text-xs font-medium" style={{ color: "var(--accent)" }}>View all →</Link>
           </div>
-          {stats.recentConversations.length === 0 ? (
+          {(stats.recentConversations ?? []).length === 0 ? (
             <p className="text-sm py-6 text-center" style={{ color: "var(--text-3)" }}>No conversations yet</p>
           ) : (
             <div className="space-y-3">
-              {stats.recentConversations.map((conv) => (
+              {(stats.recentConversations ?? []).map((conv) => (
                 <Link key={conv.id} href="/dashboard/inbox" className="flex justify-between items-start group">
                   <div className="min-w-0 mr-3">
                     <p className="text-sm font-medium" style={{ color: "var(--text)" }}>{conv.customer.firstName} {conv.customer.lastName}</p>
