@@ -67,7 +67,7 @@ async function processJob(job: { id: string; customerId: string; phone: string; 
         direction: "outbound",
         body: job.message,
         twilioSid: result.sid,
-        status: "queued",
+        status: "sent",
         fromNumber: result.from ?? "",
         toNumber: job.phone,
       },

@@ -40,16 +40,23 @@ export async function POST(req: Request) {
     });
   }
 
-  // Find or create customer — use default-org for inbound webhooks
-  const DEFAULT_ORG = "default-org";
+  // Find or create customer — use org from the receiving phone number if known
+  const phoneNumber = await prisma.twilioPhoneNumber.findUnique({ where: { phoneNumber: to } });
+
+  // Determine org: look for existing customer first, then fall back to phone number's org or default
   let customer = await prisma.customer.findFirst({ where: { phone: from } });
+  const orgId = customer?.orgId ?? (
+    phoneNumber
+      ? await prisma.conversation.findFirst({ where: { phoneNumberId: phoneNumber.id }, select: { orgId: true } })
+          .then(c => c?.orgId ?? "default-org")
+      : "default-org"
+  );
+
   if (!customer) {
     customer = await prisma.customer.create({
-      data: { orgId: DEFAULT_ORG, firstName: "Unknown", lastName: from, phone: from },
+      data: { orgId, firstName: "Unknown", lastName: from, phone: from },
     });
   }
-
-  const phoneNumber = await prisma.twilioPhoneNumber.findUnique({ where: { phoneNumber: to } });
 
   let conversation = await prisma.conversation.findFirst({ where: { customerId: customer.id } });
   if (!conversation) {

@@ -26,12 +26,22 @@ async function getClient() {
   return { client: twilio(sid, token), settings };
 }
 
+async function getAppUrl(): Promise<string> {
+  const rows = await prisma.$queryRaw<{ appUrl: string }[]>`
+    SELECT "appUrl" FROM "Settings" WHERE id = 'singleton' LIMIT 1
+  `.catch(() => []);
+  return rows[0]?.appUrl || process.env.APP_URL || "";
+}
+
 export async function sendSMS(to: string, body: string) {
   const { client, settings } = await getClient();
   const messagingServiceSid =
     settings?.twilioMessagingServiceSid || process.env.TWILIO_MESSAGING_SERVICE_SID!;
 
-  return client.messages.create({ to, body, messagingServiceSid });
+  const appUrl = await getAppUrl();
+  const statusCallback = appUrl ? `${appUrl}/api/webhooks/twilio/status` : undefined;
+
+  return client.messages.create({ to, body, messagingServiceSid, ...(statusCallback ? { statusCallback } : {}) });
 }
 
 export async function getMessage(sid: string) {
