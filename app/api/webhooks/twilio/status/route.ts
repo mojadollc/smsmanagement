@@ -31,8 +31,18 @@ export async function POST(req: Request) {
     if (queueItem?.campaignId) {
       if (MessageStatus === "delivered") {
         await prisma.campaign.update({ where: { id: queueItem.campaignId }, data: { delivered: { increment: 1 } } });
+        await prisma.campaignRecipient.updateMany({
+          where: { campaignId: queueItem.campaignId, customerId: queueItem.customerId },
+          data: { status: "delivered" },
+        });
+        await prisma.smsQueue.update({ where: { id: queueItem.id }, data: { status: "delivered" } });
       } else if (MessageStatus === "failed" || MessageStatus === "undelivered") {
         await prisma.campaign.update({ where: { id: queueItem.campaignId }, data: { failed: { increment: 1 } } });
+        await prisma.campaignRecipient.updateMany({
+          where: { campaignId: queueItem.campaignId, customerId: queueItem.customerId },
+          data: { status: "failed" },
+        });
+        await prisma.smsQueue.update({ where: { id: queueItem.id }, data: { status: "failed" } });
       }
     }
   }

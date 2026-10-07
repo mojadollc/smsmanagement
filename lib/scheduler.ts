@@ -6,11 +6,48 @@ interface ScheduleSlot {
   count: number;
 }
 
+// Convert a "HH:MM" time string in US/Pacific (default) to a UTC Date for today
+function toUTCDate(timeStr: string, baseDate: Date, timezone = "America/Vancouver"): Date {
+  const [hours, minutes] = timeStr.split(":").map(Number);
+  // Build a date string in the target timezone using Intl
+  const tzDate = new Date(baseDate);
+  // Format: get today's date parts in the target TZ
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: timezone,
+    year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(tzDate);
+  const y = parts.find(p => p.type === "year")!.value;
+  const mo = parts.find(p => p.type === "month")!.value;
+  const d = parts.find(p => p.type === "day")!.value;
+  // Construct ISO string in that timezone and parse to UTC
+  const hh = String(hours).padStart(2, "0");
+  const mm = String(minutes).padStart(2, "0");
+  // Use the timezone offset by creating a date in that zone
+  const localStr = `${y}-${mo}-${d}T${hh}:${mm}:00`;
+  // Parse as if it's in the target timezone
+  const utc = new Date(new Date(localStr).toLocaleString("en-US", { timeZone: "UTC" }));
+  // Get offset between target TZ and UTC at that moment
+  const targetOffset = getTimezoneOffset(timezone, new Date(localStr));
+  return new Date(new Date(localStr).getTime() - targetOffset);
+}
+
+function getTimezoneOffset(timezone: string, date: Date): number {
+  const utcDate = new Date(date.toLocaleString("en-US", { timeZone: "UTC" }));
+  const tzDate = new Date(date.toLocaleString("en-US", { timeZone: timezone }));
+  return utcDate.getTime() - tzDate.getTime();
+}
+
 export async function scheduleCampaign(
   campaignId: string,
   schedules: ScheduleSlot[],
   date: Date = new Date()
 ) {
+  // Get timezone from settings (default America/Vancouver = US Pacific)
+  const settingsRows = await prisma.$queryRaw<{ timezone: string }[]>`
+    SELECT timezone FROM "Settings" WHERE id = 'singleton' LIMIT 1
+  `.catch(() => []);
+  const timezone = settingsRows[0]?.timezone || "America/Vancouver";
+
   const campaign = await prisma.campaign.findUnique({
     where: { id: campaignId },
     include: {
@@ -29,9 +66,10 @@ export async function scheduleCampaign(
   const updates: Promise<unknown>[] = [];
 
   for (const slot of schedules) {
-    const [hours, minutes] = slot.time.split(":").map(Number);
-    const scheduledAt = new Date(date);
-    scheduledAt.setHours(hours, minutes, 0, 0);
+    const scheduledAt = toUTCDate(slot.time, date, timezone);
+    // If the scheduled time is in the past, send immediately (within 30s)
+    const now = new Date();
+    const effectiveScheduledAt = scheduledAt < now ? new Date(now.getTime() + 5000) : scheduledAt;
 
     const batch = recipients.slice(recipientIndex, recipientIndex + slot.count);
     recipientIndex += slot.count;
@@ -61,7 +99,7 @@ export async function scheduleCampaign(
           customerId: recipient.customer.id,
           phone: recipient.customer.phone,
           message,
-          scheduledAt,
+          scheduledAt: effectiveScheduledAt,
           campaignId,
         }),
         prisma.campaignRecipient.update({

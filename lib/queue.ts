@@ -83,6 +83,10 @@ async function processJob(job: { id: string; customerId: string; phone: string; 
         where: { id: job.campaignId },
         data: { sent: { increment: 1 }, pending: { decrement: 1 } },
       });
+      await prisma.campaignRecipient.updateMany({
+        where: { campaignId: job.campaignId, customerId: job.customerId },
+        data: { status: "sent" },
+      });
     }
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Unknown error";
@@ -94,6 +98,10 @@ async function processJob(job: { id: string; customerId: string; phone: string; 
       await prisma.campaign.update({
         where: { id: job.campaignId },
         data: { failed: { increment: 1 }, pending: { decrement: 1 } },
+      });
+      await prisma.campaignRecipient.updateMany({
+        where: { campaignId: job.campaignId, customerId: job.customerId },
+        data: { status: "failed" },
       });
     }
   }

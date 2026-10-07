@@ -93,6 +93,9 @@ export default function InboxView() {
   const selectedIdRef = useRef<string | null>(null);
   const prevUnreadRef = useRef<number>(-1);
   const originalTitleRef = useRef<string>("");
+  const prevMessageCountRef = useRef<number>(0);
+  const isUserScrollingRef = useRef<boolean>(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     originalTitleRef.current = document.title;
@@ -179,14 +182,18 @@ export default function InboxView() {
   }, []);
 
   useEffect(() => {
-    if (selected?.messages?.length) {
+    const msgCount = selected?.messages?.length ?? 0;
+    if (msgCount > prevMessageCountRef.current && !isUserScrollingRef.current) {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
-  }, [selected?.messages]);
+    prevMessageCountRef.current = msgCount;
+  }, [selected?.messages?.length]);
 
   async function openConversation(conv: Conversation) {
     const res = await fetch(`/api/conversations/${conv.id}`);
     const data = await res.json();
+    prevMessageCountRef.current = 0;
+    isUserScrollingRef.current = false;
     setSelected(data);
     setConversations((prev) => {
       const filtered = prev.filter(c => c.id !== conv.id);
@@ -315,7 +322,17 @@ export default function InboxView() {
               <div className="px-3 py-1.5 rounded-full text-xs font-medium" style={{ background: "rgba(34,197,94,0.1)", color: "#16a34a" }}>Active</div>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4" style={{ background: "var(--bg)" }}>
+            <div
+              ref={scrollContainerRef}
+              onScroll={() => {
+                const el = scrollContainerRef.current;
+                if (!el) return;
+                const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
+                isUserScrollingRef.current = !atBottom;
+              }}
+              className="flex-1 overflow-y-auto px-6 py-4 space-y-4"
+              style={{ background: "var(--bg)" }}
+            >
               {(selected.messages ?? []).length === 0 ? (
                 <div className="flex items-center justify-center h-full">
                   <p style={{ color: "var(--text-3)" }}>No messages yet</p>

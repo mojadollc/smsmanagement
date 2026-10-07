@@ -61,6 +61,10 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
 
   useEffect(() => {
     fetch(`/api/campaigns/${id}`).then((r) => r.json()).then(setCampaign);
+    const interval = setInterval(() => {
+      fetch(`/api/campaigns/${id}`).then((r) => r.json()).then(setCampaign);
+    }, 5000);
+    return () => clearInterval(interval);
   }, [id]);
 
   if (!campaign) {

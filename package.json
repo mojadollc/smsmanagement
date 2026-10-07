@@ -12,7 +12,9 @@
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
     "worker": "node dist/worker/sms-worker.js",
-    "scheduler": "node dist/worker/scheduler-worker.js"
+    "worker:dev": "ts-node --project tsconfig.worker.json -r dotenv/config worker/sms-worker.ts",
+    "scheduler": "node dist/worker/scheduler-worker.js",
+    "scheduler:dev": "ts-node --project tsconfig.worker.json -r dotenv/config worker/scheduler-worker.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",
