@@ -45,12 +45,13 @@ export async function POST(req: Request) {
 
   // Determine org: look for existing customer first, then fall back to phone number's org or default
   let customer = await prisma.customer.findFirst({ where: { phone: from } });
-  const orgId = customer?.orgId ?? (
-    phoneNumber
-      ? await prisma.conversation.findFirst({ where: { phoneNumberId: phoneNumber.id }, select: { orgId: true } })
-          .then(c => c?.orgId ?? "default-org")
-      : "default-org"
-  );
+  let orgId: string = "default-org";
+  if (customer) {
+    orgId = customer.orgId;
+  } else if (phoneNumber) {
+    const conv = await prisma.conversation.findFirst({ where: { phoneNumberId: phoneNumber.id }, select: { orgId: true } });
+    if (conv?.orgId) orgId = conv.orgId;
+  }
 
   if (!customer) {
     customer = await prisma.customer.create({
