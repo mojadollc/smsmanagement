@@ -1,30 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
+  const user = await requireAuth();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const { searchParams } = new URL(req.url);
   const page = parseInt(searchParams.get("page") ?? "1");
   const limit = parseInt(searchParams.get("limit") ?? "20");
   const search = searchParams.get("search") ?? "";
 
-  const where = search
-    ? {
-        OR: [
-          { firstName: { contains: search, mode: "insensitive" as const } },
-          { lastName: { contains: search, mode: "insensitive" as const } },
-          { phone: { contains: search } },
-          { email: { contains: search, mode: "insensitive" as const } },
-        ],
-      }
-    : {};
+  const where = {
+    orgId: user.orgId,
+    ...(search ? {
+      OR: [
+        { firstName: { contains: search, mode: "insensitive" as const } },
+        { lastName: { contains: search, mode: "insensitive" as const } },
+        { phone: { contains: search } },
+        { email: { contains: search, mode: "insensitive" as const } },
+      ],
+    } : {}),
+  };
 
   const [customers, total] = await Promise.all([
-    prisma.customer.findMany({
-      where,
-      skip: (page - 1) * limit,
-      take: limit,
-      orderBy: { createdAt: "desc" },
-    }),
+    prisma.customer.findMany({ where, skip: (page - 1) * limit, take: limit, orderBy: { createdAt: "desc" } }),
     prisma.customer.count({ where }),
   ]);
 
@@ -32,6 +32,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const user = await requireAuth();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const body = await req.json();
 
   // Bulk import
@@ -40,34 +43,21 @@ export async function POST(req: NextRequest) {
     for (const row of body) {
       try {
         await prisma.customer.create({
-          data: {
-            firstName: row.firstName || "Unknown",
-            lastName: row.lastName || row.phone,
-            phone: row.phone,
-            email: row.email || null,
-          },
+          data: { orgId: user.orgId, firstName: row.firstName || "Unknown", lastName: row.lastName || row.phone, phone: row.phone, email: row.email || null },
         });
         imported++;
-      } catch {
-        skipped++; // duplicate or invalid
-      }
+      } catch { skipped++; }
     }
     return NextResponse.json({ imported, skipped });
   }
 
   const { firstName, lastName, phone, email } = body;
-  if (!firstName || !lastName || !phone) {
+  if (!firstName || !lastName || !phone)
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-  }
 
-  const existing = await prisma.customer.findUnique({ where: { phone } });
-  if (existing) {
-    return NextResponse.json({ error: "Phone number already exists" }, { status: 409 });
-  }
+  const existing = await prisma.customer.findUnique({ where: { orgId_phone: { orgId: user.orgId, phone } } });
+  if (existing) return NextResponse.json({ error: "Phone number already exists" }, { status: 409 });
 
-  const customer = await prisma.customer.create({
-    data: { firstName, lastName, phone, email },
-  });
-
+  const customer = await prisma.customer.create({ data: { orgId: user.orgId, firstName, lastName, phone, email } });
   return NextResponse.json(customer, { status: 201 });
 }

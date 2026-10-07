@@ -6,20 +6,33 @@ datasource db {
   provider = "postgresql"
 }
 
+model Organization {
+  id            String         @id @default(cuid())
+  name          String
+  createdAt     DateTime       @default(now())
+  users         User[]
+  customers     Customer[]
+  campaigns     Campaign[]
+  groups        Group[]
+  conversations Conversation[]
+}
+
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
+  id           String        @id @default(cuid())
+  email        String        @unique
   name         String?
   password     String
-  role         String   @default("agent") // admin | agent
-  active       Boolean  @default(true)
+  role         String        @default("agent") // admin | agent
+  active       Boolean       @default(true)
+  orgId        String
+  org          Organization  @relation(fields: [orgId], references: [id])
   lastLoginAt  DateTime?
   lastLoginIp  String?
   loginCity    String?
   loginRegion  String?
   loginCountry String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 }
 
 model Settings {
@@ -48,9 +61,11 @@ model TwilioPhoneNumber {
 
 model Customer {
   id                 String              @id @default(cuid())
+  orgId              String
+  org                Organization        @relation(fields: [orgId], references: [id])
   firstName          String
   lastName           String
-  phone              String              @unique
+  phone              String
   email              String?
   smsOptIn           Boolean             @default(false)
   smsOptInAt         DateTime?
@@ -64,10 +79,14 @@ model Customer {
   smsQueue           SmsQueue[]
   optInRecords       OptInRecord[]
   groupMembers       GroupMember[]
+
+  @@unique([orgId, phone])
 }
 
 model Group {
   id          String        @id @default(cuid())
+  orgId       String
+  org         Organization  @relation(fields: [orgId], references: [id])
   name        String
   description String?
   createdAt   DateTime      @default(now())
@@ -88,6 +107,8 @@ model GroupMember {
 
 model Conversation {
   id            String             @id @default(cuid())
+  orgId         String
+  org           Organization       @relation(fields: [orgId], references: [id])
   customerId    String
   phoneNumberId String?
   status        String             @default("open")
@@ -122,6 +143,8 @@ model Message {
 
 model Campaign {
   id         String              @id @default(cuid())
+  orgId      String
+  org        Organization        @relation(fields: [orgId], references: [id])
   name       String
   message    String
   status     String              @default("draft")

@@ -7,9 +7,8 @@ export async function GET() {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const groups = await prisma.group.findMany({
-    include: {
-      _count: { select: { members: true } },
-    },
+    where: { orgId: user.orgId },
+    include: { _count: { select: { members: true } } },
     orderBy: { createdAt: "desc" },
   });
 
@@ -24,7 +23,7 @@ export async function POST(req: NextRequest) {
   if (!name) return NextResponse.json({ error: "Name required" }, { status: 400 });
 
   const group = await prisma.group.create({
-    data: { name, description },
+    data: { orgId: user.orgId, name, description },
     include: { _count: { select: { members: true } } },
   });
 

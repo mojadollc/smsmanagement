@@ -5,21 +5,10 @@ import { requireAdmin, hashPassword } from "@/lib/auth";
 export async function GET() {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  
+
   const users = await prisma.user.findMany({
-    select: { 
-      id: true, 
-      name: true, 
-      email: true, 
-      role: true, 
-      active: true, 
-      createdAt: true,
-      lastLoginAt: true,
-      lastLoginIp: true,
-      loginCity: true,
-      loginRegion: true,
-      loginCountry: true,
-    },
+    where: { orgId: admin.orgId },
+    select: { id: true, name: true, email: true, role: true, active: true, createdAt: true, lastLoginAt: true, lastLoginIp: true, loginCity: true, loginRegion: true, loginCountry: true },
     orderBy: { createdAt: "asc" },
   });
   return NextResponse.json(users);
@@ -37,7 +26,7 @@ export async function POST(req: NextRequest) {
   if (existing) return NextResponse.json({ error: "Email already exists" }, { status: 409 });
 
   const user = await prisma.user.create({
-    data: { name, email, password: await hashPassword(password), role: role || "agent" },
+    data: { name, email, password: await hashPassword(password), role: role || "agent", orgId: admin.orgId },
     select: { id: true, name: true, email: true, role: true, active: true, createdAt: true },
   });
   return NextResponse.json(user, { status: 201 });

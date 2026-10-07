@@ -1,20 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth";
 
 export async function GET() {
+  const user = await requireAuth();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const campaigns = await prisma.campaign.findMany({
+    where: { orgId: user.orgId },
     orderBy: { createdAt: "desc" },
   });
 
-  // Auto-correct any scheduled/running campaigns that are actually done
+  // Auto-correct statuses
   const toCheck = campaigns.filter(c => ["scheduled", "running"].includes(c.status));
   if (toCheck.length > 0) {
     await Promise.all(toCheck.map(async (c) => {
-      const [pendingJobs, doneJobs] = await Promise.all([
+      const [pendingJobs, doneJobs, total] = await Promise.all([
         prisma.smsQueue.count({ where: { campaignId: c.id, status: { in: ["pending", "sending"] } } }),
         prisma.smsQueue.count({ where: { campaignId: c.id, status: { in: ["sent", "delivered", "failed", "skipped"] } } }),
+        prisma.smsQueue.count({ where: { campaignId: c.id } }),
       ]);
-      const total = await prisma.smsQueue.count({ where: { campaignId: c.id } });
       if (pendingJobs === 0 && total > 0 && doneJobs === total) {
         await prisma.campaign.update({ where: { id: c.id }, data: { status: "completed", pending: 0 } });
         c.status = "completed";
@@ -29,25 +34,23 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const { name, message, customerIds, dailyLimit, schedules } = body;
+  const user = await requireAuth();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  if (!name || !message || !customerIds?.length) {
+  const { name, message, customerIds, dailyLimit, schedules } = await req.json();
+  if (!name || !message || !customerIds?.length)
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-  }
 
   const campaign = await prisma.campaign.create({
     data: {
-      name,
-      message,
+      orgId: user.orgId,
+      name, message,
       dailyLimit: dailyLimit ?? 200,
       schedules,
       totalCount: customerIds.length,
       pending: customerIds.length,
       status: "draft",
-      recipients: {
-        create: customerIds.map((id: string) => ({ customerId: id })),
-      },
+      recipients: { create: customerIds.map((id: string) => ({ customerId: id })) },
     },
   });
 

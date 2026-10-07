@@ -15,7 +15,7 @@ export async function verifyPassword(password: string, hash: string) {
   return bcrypt.compare(password, hash);
 }
 
-export async function signToken(payload: { userId: string; role: string }) {
+export async function signToken(payload: { userId: string; role: string; orgId: string }) {
   return new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime("7d")
@@ -25,7 +25,7 @@ export async function signToken(payload: { userId: string; role: string }) {
 export async function verifyToken(token: string) {
   try {
     const { payload } = await jwtVerify(token, SECRET);
-    return payload as { userId: string; role: string };
+    return payload as { userId: string; role: string; orgId: string };
   } catch {
     return null;
   }
@@ -57,12 +57,18 @@ export async function requireAdmin() {
 export async function ensureAdminExists() {
   const count = await prisma.user.count();
   if (count === 0) {
+    const org = await prisma.organization.upsert({
+      where: { id: "default-org" },
+      update: {},
+      create: { id: "default-org", name: "Default Organization" },
+    });
     await prisma.user.create({
       data: {
         email: "admin@sms.local",
         name: "Admin",
         password: await hashPassword("admin123"),
         role: "admin",
+        orgId: org.id,
       },
     });
   }

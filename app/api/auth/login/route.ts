@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
     if (!valid)
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
 
-    const token = await signToken({ userId: user.id, role: user.role });
+    const token = await signToken({ userId: user.id, role: user.role, orgId: user.orgId });
     
     // Get IP and location
     const ip = getClientIp(req);
