@@ -69,6 +69,7 @@ export default function InboxView() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [roleLoaded, setRoleLoaded] = useState(false);
 
   // Refs — never cause re-renders
   const convListRef = useRef<Conversation[]>([]);
@@ -151,10 +152,12 @@ export default function InboxView() {
     fetch("/api/auth/me").then(r => r.json()).then(d => {
       if (d.role === "admin") { setIsAdmin(true); setShowAll(true); }
       setCurrentUserId(d.id);
-    }).catch(() => {});
+      setRoleLoaded(true);
+    }).catch(() => { setRoleLoaded(true); });
   }, []);
 
   useEffect(() => {
+    if (!roleLoaded) return;
     // Initial load
     const qs = showAll ? "?limit=50&all=true" : "?limit=50";
     fetch(`/api/conversations${qs}`)
@@ -171,7 +174,7 @@ export default function InboxView() {
     const listInterval = setInterval(pollList, 4000);
     const msgInterval  = setInterval(pollSelected, 3000);
     return () => { clearInterval(listInterval); clearInterval(msgInterval); };
-  }, [pollList, pollSelected, showAll]);
+  }, [pollList, pollSelected, showAll, roleLoaded]);
 
   // ── Open a conversation — debounced to prevent double-click issues ──
   async function openConversation(conv: Conversation) {
