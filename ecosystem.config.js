@@ -12,16 +12,18 @@ module.exports = {
       name: "sms-worker",
       script: "dist/worker/sms-worker.js",
       interpreter: "node",
-      env: { NODE_ENV: "production" },
+      interpreter_args: "-r dotenv/config",
+      env: { NODE_ENV: "production", DOTENV_CONFIG_PATH: "/var/www/sms/.env" },
       max_restarts: 5,
-      restart_delay: 30000, // wait 30s between restarts — not a tight loop
-      cron_restart: "*/5 * * * *", // also restart every 5 min as a safety net
+      restart_delay: 30000,
+      cron_restart: "*/5 * * * *",
     },
     {
       name: "sms-scheduler",
       script: "dist/worker/scheduler-worker.js",
       interpreter: "node",
-      env: { NODE_ENV: "production" },
+      interpreter_args: "-r dotenv/config",
+      env: { NODE_ENV: "production", DOTENV_CONFIG_PATH: "/var/www/sms/.env" },
       max_restarts: 5,
       restart_delay: 30000,
       cron_restart: "*/5 * * * *",
