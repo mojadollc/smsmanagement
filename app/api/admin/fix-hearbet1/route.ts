@@ -2,37 +2,36 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
-  const PHONE = "+14073954525";
-
-  // Find ALL messages involving this phone number regardless of conversation
-  const allMessages = await prisma.message.findMany({
-    where: {
-      OR: [
-        { fromNumber: PHONE },
-        { toNumber: PHONE },
-      ],
-    },
-    select: {
-      id: true,
-      conversationId: true,
-      customerId: true,
-      direction: true,
-      body: true,
-      fromNumber: true,
-      toNumber: true,
-      status: true,
-      createdAt: true,
-      sentAt: true,
-    },
-    orderBy: { createdAt: "asc" },
+  // Get all users
+  const users = await prisma.user.findMany({
+    select: { id: true, email: true, name: true, orgId: true, role: true },
   });
 
-  // Also check sms_queue for any sent messages to this number
-  const queueItems = await prisma.smsQueue.findMany({
-    where: { phone: PHONE },
-    select: { id: true, phone: true, message: true, status: true, scheduledAt: true, createdAt: true, twilioSid: true },
-    orderBy: { createdAt: "asc" },
+  // Get all customers grouped by phone
+  const customers = await prisma.customer.findMany({
+    select: { id: true, firstName: true, lastName: true, phone: true, orgId: true },
+    orderBy: { phone: "asc" },
   });
 
-  return NextResponse.json({ allMessages, queueItems, totalMessages: allMessages.length });
+  // Get all conversations
+  const conversations = await prisma.conversation.findMany({
+    select: { id: true, customerId: true, assignedUserId: true, orgId: true, status: true, lastMessageAt: true },
+    orderBy: { lastMessageAt: "asc" },
+  });
+
+  // Get message counts per conversation
+  const msgCounts = await prisma.message.groupBy({
+    by: ["conversationId"],
+    _count: { id: true },
+  });
+
+  // Find duplicate phones
+  const phoneCounts: Record<string, typeof customers> = {};
+  for (const c of customers) {
+    if (!phoneCounts[c.phone]) phoneCounts[c.phone] = [];
+    phoneCounts[c.phone].push(c);
+  }
+  const duplicates = Object.entries(phoneCounts).filter(([, arr]) => arr.length > 1);
+
+  return NextResponse.json({ users, customers, conversations, msgCounts, duplicates: duplicates.map(([phone, arr]) => ({ phone, customers: arr })) });
 }
