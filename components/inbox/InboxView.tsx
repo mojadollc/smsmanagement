@@ -308,8 +308,8 @@ export default function InboxView() {
                           {conv.lastMessageAt ? formatTime(conv.lastMessageAt) : ""}
                         </span>
                       </div>
-                      <p className="text-sm truncate" style={{ color: "var(--text-2)" }}>
-                        {conv.messages?.[0]?.body || "No messages yet"}
+                      <p className="text-sm truncate" style={{ color: conv.unreadCount > 0 ? "var(--text)" : "var(--text-2)", fontWeight: conv.unreadCount > 0 ? 600 : 400 }}>
+                        {conv.messages?.[0]?.direction === "inbound" ? "↩ " : ""}{conv.messages?.[0]?.body || "No messages yet"}
                       </p>
                     </div>
                   </div>

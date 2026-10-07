@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
       include: {
         customer: true,
         assignedUser: { select: { id: true, name: true, email: true } },
-        messages: { orderBy: { createdAt: "desc" }, take: 1, select: { id: true, body: true, createdAt: true, direction: true, status: true } },
+        messages: { orderBy: { createdAt: "desc" }, take: 1, select: { id: true, body: true, createdAt: true, direction: true, status: true, fromNumber: true } },
       },
       orderBy: { lastMessageAt: "desc" },
     }),
