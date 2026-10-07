@@ -10,9 +10,13 @@ export async function GET() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Get conversation IDs for this org
+    // Agents see only their assigned conversations; admin sees all
+    const convWhere = user.role === "admin"
+      ? { orgId: user.orgId }
+      : { orgId: user.orgId, assignedUserId: user.id };
+
     const orgConvIds = await prisma.conversation.findMany({
-      where: { orgId: user.orgId },
+      where: convWhere,
       select: { id: true },
     }).then(rows => rows.map(r => r.id));
 

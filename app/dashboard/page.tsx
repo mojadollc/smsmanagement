@@ -41,7 +41,8 @@ export default function DashboardPage() {
     Promise.all([
       fetch("/api/reports").then((r) => r.ok ? r.json() : null),
       fetch("/api/conversations?limit=5").then((r) => r.ok ? r.json() : null),
-    ]).then(([reports, convos]) => {
+      fetch("/api/auth/me").then((r) => r.ok ? r.json() : null),
+    ]).then(([reports, convos, me]) => {
       if (mounted && reports) {
         setStats({
           ...reports,
