@@ -10,6 +10,6 @@
     "rootDir": ".",
     "resolveJsonModule": true
   },
-  "include": ["worker/**/*", "lib/**/*"],
+  "include": ["worker/**/*", "lib/**/*", "scripts/**/*"],
   "exclude": ["node_modules", ".next"]
 }
