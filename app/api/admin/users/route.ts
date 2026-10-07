@@ -25,8 +25,9 @@ export async function POST(req: NextRequest) {
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) return NextResponse.json({ error: "Email already exists" }, { status: 409 });
 
+  const org = await prisma.organization.create({ data: { name: `${name}'s Org` } });
   const user = await prisma.user.create({
-    data: { name, email, password: await hashPassword(password), role: role || "agent", orgId: admin.orgId },
+    data: { name, email, password: await hashPassword(password), role: role || "agent", orgId: org.id },
     select: { id: true, name: true, email: true, role: true, active: true, createdAt: true },
   });
   return NextResponse.json(user, { status: 201 });
