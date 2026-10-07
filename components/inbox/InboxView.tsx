@@ -71,23 +71,23 @@ export default function InboxView() {
   const convListRef = useRef<Conversation[]>([]);
   const selectedIdRef = useRef<string | null>(null);
   const prevMsgCountRef = useRef(0);
-  const userScrollingRef = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const isOpeningRef = useRef(false); // prevent double-click race
+  const isOpeningRef = useRef(false);
 
   // Keep refs in sync
   useEffect(() => { convListRef.current = convList; }, [convList]);
   useEffect(() => { selectedIdRef.current = selectedId; }, [selectedId]);
 
-  // ── Scroll to bottom only when message count increases and user is at bottom ──
-  useEffect(() => {
-    const count = selectedConv?.messages?.length ?? 0;
-    if (count > prevMsgCountRef.current && !userScrollingRef.current) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-    prevMsgCountRef.current = count;
-  }, [selectedConv?.messages?.length]);
+  function isNearBottom() {
+    const el = scrollRef.current;
+    if (!el) return true;
+    return el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+  }
+
+  function scrollToBottom(behavior: ScrollBehavior = "smooth") {
+    messagesEndRef.current?.scrollIntoView({ behavior });
+  }
 
   // ── Poll conversation list every 4s — only update unread counts & add new convos, never reorder ──
   const pollList = useCallback(async () => {
@@ -129,12 +129,15 @@ export default function InboxView() {
       const data = await res.json();
       setSelectedConv(prev => {
         if (!prev) return data;
-        // Only update if message count or last status changed
+        const countChanged = data.messages?.length !== prev.messages?.length;
         const prevLast = prev.messages?.[prev.messages.length - 1];
         const newLast = data.messages?.[data.messages.length - 1];
-        const countChanged = data.messages?.length !== prev.messages?.length;
         const statusChanged = prevLast?.id === newLast?.id && prevLast?.status !== newLast?.status;
         if (!countChanged && !statusChanged) return prev;
+        // Only scroll if new message arrived and user is near bottom
+        if (countChanged && data.messages.length > (prev.messages?.length ?? 0) && isNearBottom()) {
+          setTimeout(() => scrollToBottom("smooth"), 30);
+        }
         return data;
       });
     } catch {}
@@ -164,7 +167,7 @@ export default function InboxView() {
     isOpeningRef.current = true;
     setSelectedId(conv.id);
     prevMsgCountRef.current = 0;
-    userScrollingRef.current = false;
+    setSelectedConv(null); // clear immediately so old messages don't flash
 
     // Mark as read in list immediately
     setConvList(prev => prev.map(c => c.id === conv.id ? { ...c, unreadCount: 0 } : c));
@@ -174,10 +177,10 @@ export default function InboxView() {
       if (res.ok) {
         const data = await res.json();
         setSelectedConv(data);
-        // Scroll to bottom after render
-        setTimeout(() => {
-          messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
-        }, 50);
+        // Scroll to bottom after DOM paints
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => scrollToBottom("instant"));
+        });
       }
     } catch {}
     isOpeningRef.current = false;
@@ -199,6 +202,10 @@ export default function InboxView() {
         const now = new Date().toISOString();
         setSelectedConv(prev => prev ? { ...prev, messages: [...(prev.messages ?? []), newMsg], lastMessageAt: now } : prev);
         setConvList(prev => prev.map(c => c.id === selectedConv.id ? { ...c, lastMessageAt: now } : c));
+        // Always scroll to bottom after sending
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => scrollToBottom("smooth"));
+        });
       }
     } catch {}
     setSending(false);
@@ -310,11 +317,6 @@ export default function InboxView() {
             {/* Messages */}
             <div
               ref={scrollRef}
-              onScroll={() => {
-                const el = scrollRef.current;
-                if (!el) return;
-                userScrollingRef.current = el.scrollHeight - el.scrollTop - el.clientHeight > 80;
-              }}
               className="flex-1 overflow-y-auto px-6 py-4 space-y-3"
               style={{ background: "var(--bg)" }}
             >
