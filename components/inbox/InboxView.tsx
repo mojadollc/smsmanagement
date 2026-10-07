@@ -381,8 +381,7 @@ export default function InboxView() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Reply box — hidden for admin (monitor only) */}
-            {!isAdmin && (
+            {/* Reply box */}
               <div className="px-6 py-4 border-t shrink-0" style={{ borderColor: "var(--border)" }}>
                 <div className="flex items-end gap-3 p-2 rounded-2xl" style={{ background: "var(--bg-subtle)" }}>
                   <textarea
@@ -413,12 +412,6 @@ export default function InboxView() {
                   </button>
                 </div>
               </div>
-            )}
-            {isAdmin && (
-              <div className="px-6 py-3 border-t shrink-0 text-center" style={{ borderColor: "var(--border)", background: "var(--bg-subtle)" }}>
-                <p className="text-xs" style={{ color: "var(--text-3)" }}>👁 Monitor mode — replies are disabled for admin</p>
-              </div>
-            )}
           </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center p-8">

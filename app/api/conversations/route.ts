@@ -13,7 +13,6 @@ export async function GET(req: NextRequest) {
 
   const where = {
     orgId: user.orgId,
-    ...(all ? {} : { assignedUserId: user.id }),
   };
 
   const [conversations, total] = await Promise.all([
