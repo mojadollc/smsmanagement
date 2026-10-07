@@ -8,6 +8,9 @@ interface Stats {
   sentToday: number;
   deliveredToday: number;
   failedToday: number;
+  totalSent: number;
+  totalDelivered: number;
+  totalFailed: number;
   inboxUnread: number;
   dailyLimit: number;
   activeCampaigns: {
@@ -88,11 +91,11 @@ export default function DashboardPage() {
   const barColor = pct > 90 ? "#ef4444" : pct > 70 ? "#f59e0b" : "#3b82f6";
 
   const statCards = [
-    { label: "Sent Today",    value: stats.sentToday,      iconBg: "rgba(59,130,246,0.12)",  iconColor: "#3b82f6",
+    { label: "Total Sent",    value: stats.totalSent,      iconBg: "rgba(59,130,246,0.12)",  iconColor: "#3b82f6",
       icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg> },
-    { label: "Delivered",     value: stats.deliveredToday, iconBg: "rgba(34,197,94,0.12)",   iconColor: "#16a34a",
+    { label: "Total Delivered",     value: stats.totalDelivered, iconBg: "rgba(34,197,94,0.12)",   iconColor: "#16a34a",
       icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
-    { label: "Failed",        value: stats.failedToday,    iconBg: "rgba(239,68,68,0.12)",   iconColor: "#dc2626",
+    { label: "Total Failed",        value: stats.totalFailed,    iconBg: "rgba(239,68,68,0.12)",   iconColor: "#dc2626",
       icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
     { label: "Unread Inbox",  value: stats.inboxUnread,    iconBg: "rgba(168,85,247,0.12)",  iconColor: "#9333ea",
       icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg> },

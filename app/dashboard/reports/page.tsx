@@ -20,6 +20,7 @@ interface ReportData {
   totalOptOuts: number;
   sentToday: number;
   deliveredToday: number;
+  failedPeriod: number;
   dailyLimit: number;
   campaigns: Campaign[];
   dailyTrend: { date: string; sent: number }[];
@@ -208,16 +209,20 @@ function BarChart({ campaigns }: { campaigns: Campaign[] }) {
   );
 }
 
+type Period = "day" | "week" | "month";
+
 export default function ReportsPage() {
   const [data, setData] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState<Period>("day");
 
   useEffect(() => {
-    fetch("/api/reports")
+    setLoading(true);
+    fetch(`/api/reports?period=${period}`)
       .then((r) => r.ok ? r.json() : null)
       .then((d) => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
-  }, []);
+  }, [period]);
 
   if (loading) {
     return (
@@ -247,21 +252,39 @@ export default function ReportsPage() {
   const remaining = Math.max(0, data.dailyLimit - data.sentToday);
 
   const statCards = [
-    { label: "Total Sent", value: data.totalSent.toLocaleString(), color: "#3b82f6", bg: "rgba(59,130,246,0.08)",
+    { label: period === "day" ? "Sent Today" : period === "week" ? "Sent (7d)" : "Sent (30d)", value: data.sentToday.toLocaleString(), color: "#3b82f6", bg: "rgba(59,130,246,0.08)",
       icon: <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" /> },
-    { label: "Delivered", value: data.totalDelivered.toLocaleString(), color: "#22c55e", bg: "rgba(34,197,94,0.08)",
+    { label: "Delivered", value: data.deliveredToday.toLocaleString(), color: "#22c55e", bg: "rgba(34,197,94,0.08)",
       icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /> },
-    { label: "Failed", value: data.totalFailed.toLocaleString(), color: "#ef4444", bg: "rgba(239,68,68,0.08)",
+    { label: "Failed", value: (data.failedPeriod ?? data.totalFailed).toLocaleString(), color: "#ef4444", bg: "rgba(239,68,68,0.08)",
       icon: <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /> },
-    { label: "Delivery Rate", value: `${deliveryRate}%`, color: "#8b5cf6", bg: "rgba(139,92,246,0.08)",
+    { label: "All-time Rate", value: `${deliveryRate}%`, color: "#8b5cf6", bg: "rgba(139,92,246,0.08)",
       icon: <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /> },
   ];
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold" style={{ color: "var(--text)" }}>Reports</h1>
-        <p className="text-sm mt-0.5" style={{ color: "var(--text-2)" }}>SMS delivery analytics and campaign performance</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold" style={{ color: "var(--text)" }}>Reports</h1>
+          <p className="text-sm mt-0.5" style={{ color: "var(--text-2)" }}>SMS delivery analytics and campaign performance</p>
+        </div>
+        <div className="flex items-center gap-1 p-1 rounded-xl" style={{ background: "var(--bg-subtle)", border: "1px solid var(--border)" }}>
+          {(["day", "week", "month"] as Period[]).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPeriod(p)}
+              className="px-4 py-1.5 rounded-lg text-sm font-medium transition-all"
+              style={{
+                background: period === p ? "var(--bg-card)" : "transparent",
+                color: period === p ? "var(--accent)" : "var(--text-3)",
+                boxShadow: period === p ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+              }}
+            >
+              {p === "day" ? "Today" : p === "week" ? "7 Days" : "30 Days"}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Stat Cards */}
