@@ -6,12 +6,26 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const campaign = await prisma.campaign.findUnique({
-    where: { id },
-    include: { recipients: { include: { customer: true } } },
-  });
+  const [campaign, queueJobs] = await Promise.all([
+    prisma.campaign.findUnique({
+      where: { id },
+      include: { recipients: { include: { customer: true } } },
+    }),
+    prisma.smsQueue.findMany({
+      where: { campaignId: id },
+      select: { customerId: true, status: true, scheduledAt: true, twilioSid: true, lastError: true, attempts: true },
+    }),
+  ]);
   if (!campaign) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return NextResponse.json(campaign);
+
+  // Map queue status onto each recipient
+  const queueByCustomer = Object.fromEntries(queueJobs.map((j) => [j.customerId, j]));
+  const recipients = campaign.recipients.map((r) => ({
+    ...r,
+    queue: queueByCustomer[r.customerId] ?? null,
+  }));
+
+  return NextResponse.json({ ...campaign, recipients });
 }
 
 export async function PUT(

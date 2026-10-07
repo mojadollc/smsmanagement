@@ -75,7 +75,8 @@ export default function CampaignList() {
                       </span>
                     </td>
                     <td className="px-5 py-3">
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 items-center">
+                        <Link href={`/dashboard/campaigns/${c.id}`} className="text-xs font-medium hover:underline" style={{ color: "var(--accent)" }}>View</Link>
                         {c.status === "running" || c.status === "scheduled" ? (
                           <button onClick={() => action(c.id, "pause")} className="text-xs font-medium hover:underline" style={{ color: "#ea580c" }}>Pause</button>
                         ) : c.status === "paused" ? (
