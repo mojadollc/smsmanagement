@@ -68,6 +68,7 @@ export default function InboxView() {
   const [search, setSearch] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
   const [showAll, setShowAll] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   // Refs — never cause re-renders
   const convListRef = useRef<Conversation[]>([]);
@@ -147,7 +148,10 @@ export default function InboxView() {
   }, []);
 
   useEffect(() => {
-    fetch("/api/auth/me").then(r => r.json()).then(d => { if (d.role === "admin") setIsAdmin(true); }).catch(() => {});
+    fetch("/api/auth/me").then(r => r.json()).then(d => {
+      if (d.role === "admin") { setIsAdmin(true); setShowAll(true); }
+      setCurrentUserId(d.id);
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -240,17 +244,9 @@ export default function InboxView() {
                 </span>
               )}
               {isAdmin && (
-                <button
-                  onClick={() => setShowAll(v => !v)}
-                  className="text-xs px-2.5 py-1 rounded-lg font-medium transition-colors"
-                  style={{
-                    background: showAll ? "var(--accent)" : "var(--bg-subtle)",
-                    color: showAll ? "white" : "var(--text-2)",
-                    border: "1px solid var(--border)",
-                  }}
-                >
-                  {showAll ? "All" : "Mine"}
-                </button>
+                <span className="text-xs px-2.5 py-1 rounded-lg font-medium" style={{ background: "rgba(239,68,68,0.1)", color: "#dc2626" }}>
+                  Monitor
+                </span>
               )}
             </div>
           </div>
@@ -382,37 +378,44 @@ export default function InboxView() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Reply box */}
-            <div className="px-6 py-4 border-t shrink-0" style={{ borderColor: "var(--border)" }}>
-              <div className="flex items-end gap-3 p-2 rounded-2xl" style={{ background: "var(--bg-subtle)" }}>
-                <textarea
-                  value={reply}
-                  onChange={e => setReply(e.target.value)}
-                  onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendReply(); } }}
-                  placeholder="Type a message..."
-                  rows={1}
-                  className="flex-1 px-4 py-2.5 text-sm resize-none focus:outline-none"
-                  style={{ background: "transparent", color: "var(--text)", maxHeight: "120px" }}
-                />
-                <button
-                  onClick={sendReply}
-                  disabled={sending || !reply.trim()}
-                  className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-white transition-all disabled:opacity-50"
-                  style={{ background: "linear-gradient(135deg,#3b82f6,#6366f1)" }}
-                >
-                  {sending ? (
-                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                  ) : (
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                    </svg>
-                  )}
-                </button>
+            {/* Reply box — hidden for admin (monitor only) */}
+            {!isAdmin && (
+              <div className="px-6 py-4 border-t shrink-0" style={{ borderColor: "var(--border)" }}>
+                <div className="flex items-end gap-3 p-2 rounded-2xl" style={{ background: "var(--bg-subtle)" }}>
+                  <textarea
+                    value={reply}
+                    onChange={e => setReply(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendReply(); } }}
+                    placeholder="Type a message..."
+                    rows={1}
+                    className="flex-1 px-4 py-2.5 text-sm resize-none focus:outline-none"
+                    style={{ background: "transparent", color: "var(--text)", maxHeight: "120px" }}
+                  />
+                  <button
+                    onClick={sendReply}
+                    disabled={sending || !reply.trim()}
+                    className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-white transition-all disabled:opacity-50"
+                    style={{ background: "linear-gradient(135deg,#3b82f6,#6366f1)" }}
+                  >
+                    {sending ? (
+                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
+            {isAdmin && (
+              <div className="px-6 py-3 border-t shrink-0 text-center" style={{ borderColor: "var(--border)", background: "var(--bg-subtle)" }}>
+                <p className="text-xs" style={{ color: "var(--text-3)" }}>👁 Monitor mode — replies are disabled for admin</p>
+              </div>
+            )}
           </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center p-8">
