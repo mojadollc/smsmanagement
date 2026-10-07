@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+const DEFAULT_AGENT_EMAIL = "hearbet1@gmail.com";
+
 export async function POST(req: Request) {
   const body = await req.text();
   const params = Object.fromEntries(new URLSearchParams(body));
@@ -40,10 +42,12 @@ export async function POST(req: Request) {
     });
   }
 
-  // Find or create customer — use org from the receiving phone number if known
   const phoneNumber = await prisma.twilioPhoneNumber.findUnique({ where: { phoneNumber: to } });
 
-  // Determine org: look for existing customer first, then fall back to phone number's org or default
+  // Find default agent to assign all conversations to
+  const defaultAgent = await prisma.user.findFirst({ where: { email: DEFAULT_AGENT_EMAIL, active: true } });
+
+  // Find or create customer
   let customer = await prisma.customer.findFirst({ where: { phone: from } });
   let orgId: string = "default-org";
   if (customer) {
@@ -59,10 +63,40 @@ export async function POST(req: Request) {
     });
   }
 
-  let conversation = await prisma.conversation.findFirst({ where: { customerId: customer.id } });
+  // Always find the SINGLE existing conversation for this customer — never create duplicates
+  // Pick the one with the most recent activity if multiple exist
+  const conversations = await prisma.conversation.findMany({
+    where: { customerId: customer.id },
+    orderBy: { lastMessageAt: "desc" },
+  });
+
+  let conversation = conversations[0] ?? null;
+
+  // Merge any duplicate conversations into the most recent one
+  if (conversations.length > 1) {
+    const keepId = conversations[0].id;
+    const duplicateIds = conversations.slice(1).map(c => c.id);
+    await prisma.message.updateMany({
+      where: { conversationId: { in: duplicateIds } },
+      data: { conversationId: keepId },
+    });
+    await prisma.conversation.deleteMany({ where: { id: { in: duplicateIds } } });
+  }
+
   if (!conversation) {
     conversation = await prisma.conversation.create({
-      data: { orgId: customer.orgId, customerId: customer.id, phoneNumberId: phoneNumber?.id },
+      data: {
+        orgId: customer.orgId,
+        customerId: customer.id,
+        phoneNumberId: phoneNumber?.id,
+        assignedUserId: defaultAgent?.id ?? null,
+      },
+    });
+  } else if (!conversation.assignedUserId && defaultAgent) {
+    // Assign unassigned conversations to default agent
+    await prisma.conversation.update({
+      where: { id: conversation.id },
+      data: { assignedUserId: defaultAgent.id },
     });
   }
 
