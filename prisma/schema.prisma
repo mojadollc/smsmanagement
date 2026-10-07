@@ -18,21 +18,22 @@ model Organization {
 }
 
 model User {
-  id           String        @id @default(cuid())
-  email        String        @unique
-  name         String?
-  password     String
-  role         String        @default("agent") // admin | agent
-  active       Boolean       @default(true)
-  orgId        String
-  org          Organization  @relation(fields: [orgId], references: [id])
-  lastLoginAt  DateTime?
-  lastLoginIp  String?
-  loginCity    String?
-  loginRegion  String?
-  loginCountry String?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id                String         @id @default(cuid())
+  email             String         @unique
+  name              String?
+  password          String
+  role              String         @default("agent") // admin | agent
+  active            Boolean        @default(true)
+  orgId             String
+  org               Organization   @relation(fields: [orgId], references: [id])
+  lastLoginAt       DateTime?
+  lastLoginIp       String?
+  loginCity         String?
+  loginRegion       String?
+  loginCountry      String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  assignedConversations Conversation[]
 }
 
 model Settings {
@@ -106,19 +107,21 @@ model GroupMember {
 }
 
 model Conversation {
-  id            String             @id @default(cuid())
-  orgId         String
-  org           Organization       @relation(fields: [orgId], references: [id])
-  customerId    String
-  phoneNumberId String?
-  status        String             @default("open")
-  unreadCount   Int                @default(0)
-  lastMessageAt DateTime?
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
-  customer      Customer           @relation(fields: [customerId], references: [id])
-  phoneNumber   TwilioPhoneNumber? @relation(fields: [phoneNumberId], references: [id])
-  messages      Message[]
+  id             String             @id @default(cuid())
+  orgId          String
+  org            Organization       @relation(fields: [orgId], references: [id])
+  customerId     String
+  phoneNumberId  String?
+  assignedUserId String?
+  status         String             @default("open")
+  unreadCount    Int                @default(0)
+  lastMessageAt  DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  customer       Customer           @relation(fields: [customerId], references: [id])
+  phoneNumber    TwilioPhoneNumber? @relation(fields: [phoneNumberId], references: [id])
+  assignedUser   User?              @relation(fields: [assignedUserId], references: [id])
+  messages       Message[]
 }
 
 model Message {

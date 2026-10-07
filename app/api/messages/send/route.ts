@@ -17,7 +17,9 @@ export async function POST(req: NextRequest) {
 
   let conversation = await prisma.conversation.findFirst({ where: { customerId, orgId: user.orgId } });
   if (!conversation) {
-    conversation = await prisma.conversation.create({ data: { customerId, orgId: user.orgId } });
+    conversation = await prisma.conversation.create({ data: { customerId, orgId: user.orgId, assignedUserId: user.id } });
+  } else if (!conversation.assignedUserId) {
+    conversation = await prisma.conversation.update({ where: { id: conversation.id }, data: { assignedUserId: user.id } });
   }
 
   const result = await sendSMS(customer.phone, message);

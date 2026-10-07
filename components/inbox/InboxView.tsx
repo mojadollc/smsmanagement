@@ -66,6 +66,8 @@ export default function InboxView() {
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
   const [search, setSearch] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   // Refs — never cause re-renders
   const convListRef = useRef<Conversation[]>([]);
@@ -92,7 +94,8 @@ export default function InboxView() {
   // ── Poll conversation list every 4s — only update unread counts & add new convos, never reorder ──
   const pollList = useCallback(async () => {
     try {
-      const res = await fetch("/api/conversations?limit=50");
+      const qs = showAll ? "?limit=50&all=true" : "?limit=50";
+      const res = await fetch(`/api/conversations${qs}`);
       if (!res.ok) return;
       const data = await res.json();
       const fresh: Conversation[] = data.conversations ?? [];
@@ -117,7 +120,7 @@ export default function InboxView() {
         return updated;
       });
     } catch {}
-  }, []);
+  }, [showAll]);
 
   // ── Poll selected conversation messages every 3s ──
   const pollSelected = useCallback(async () => {
@@ -144,8 +147,13 @@ export default function InboxView() {
   }, []);
 
   useEffect(() => {
+    fetch("/api/auth/me").then(r => r.json()).then(d => { if (d.role === "admin") setIsAdmin(true); }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
     // Initial load
-    fetch("/api/conversations?limit=50")
+    const qs = showAll ? "?limit=50&all=true" : "?limit=50";
+    fetch(`/api/conversations${qs}`)
       .then(r => r.json())
       .then(d => {
         const convos: Conversation[] = d.conversations ?? [];
@@ -159,7 +167,7 @@ export default function InboxView() {
     const listInterval = setInterval(pollList, 4000);
     const msgInterval  = setInterval(pollSelected, 3000);
     return () => { clearInterval(listInterval); clearInterval(msgInterval); };
-  }, [pollList, pollSelected]);
+  }, [pollList, pollSelected, showAll]);
 
   // ── Open a conversation — debounced to prevent double-click issues ──
   async function openConversation(conv: Conversation) {
@@ -225,11 +233,26 @@ export default function InboxView() {
         <div className="p-4 border-b shrink-0" style={{ borderColor: "var(--border)" }}>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-bold" style={{ color: "var(--text)" }}>Messages</h2>
-            {totalUnread > 0 && (
-              <span className="px-2.5 py-1 rounded-full text-xs font-bold text-white" style={{ background: "#dc2626" }}>
-                {totalUnread}
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              {totalUnread > 0 && (
+                <span className="px-2.5 py-1 rounded-full text-xs font-bold text-white" style={{ background: "#dc2626" }}>
+                  {totalUnread}
+                </span>
+              )}
+              {isAdmin && (
+                <button
+                  onClick={() => setShowAll(v => !v)}
+                  className="text-xs px-2.5 py-1 rounded-lg font-medium transition-colors"
+                  style={{
+                    background: showAll ? "var(--accent)" : "var(--bg-subtle)",
+                    color: showAll ? "white" : "var(--text-2)",
+                    border: "1px solid var(--border)",
+                  }}
+                >
+                  {showAll ? "All" : "Mine"}
+                </button>
+              )}
+            </div>
           </div>
           <div className="relative">
             <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--text-3)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
