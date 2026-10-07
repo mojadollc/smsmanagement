@@ -18,7 +18,7 @@ export async function POST(req: Request) {
 
   // Handle opt-in/out keywords
   if (optOutType) {
-    const customer = await prisma.customer.findUnique({ where: { phone: from } });
+    const customer = await prisma.customer.findFirst({ where: { phone: from } });
     if (customer) {
       if (optOutType === "STOP") {
         await prisma.customer.update({
@@ -40,11 +40,12 @@ export async function POST(req: Request) {
     });
   }
 
-  // Find or create customer
-  let customer = await prisma.customer.findUnique({ where: { phone: from } });
+  // Find or create customer — use default-org for inbound webhooks
+  const DEFAULT_ORG = "default-org";
+  let customer = await prisma.customer.findFirst({ where: { phone: from } });
   if (!customer) {
     customer = await prisma.customer.create({
-      data: { firstName: "Unknown", lastName: from, phone: from },
+      data: { orgId: DEFAULT_ORG, firstName: "Unknown", lastName: from, phone: from },
     });
   }
 
@@ -53,7 +54,7 @@ export async function POST(req: Request) {
   let conversation = await prisma.conversation.findFirst({ where: { customerId: customer.id } });
   if (!conversation) {
     conversation = await prisma.conversation.create({
-      data: { customerId: customer.id, phoneNumberId: phoneNumber?.id },
+      data: { orgId: customer.orgId, customerId: customer.id, phoneNumberId: phoneNumber?.id },
     });
   }
 

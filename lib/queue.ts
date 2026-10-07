@@ -34,7 +34,7 @@ export async function processDueJobs() {
   }
 }
 
-async function processJob(job: { id: string; customerId: string; phone: string; message: string; campaignId: string | null; customer: { smsOptOut: boolean } }) {
+async function processJob(job: { id: string; customerId: string; phone: string; message: string; campaignId: string | null; customer: { smsOptOut: boolean; orgId: string } }) {
   if (job.customer.smsOptOut) {
     await prisma.smsQueue.update({
       where: { id: job.id },
@@ -56,7 +56,7 @@ async function processJob(job: { id: string; customerId: string; phone: string; 
     });
     if (!conversation) {
       conversation = await prisma.conversation.create({
-        data: { customerId: job.customerId },
+        data: { customerId: job.customerId, orgId: job.customer.orgId },
       });
     }
 
