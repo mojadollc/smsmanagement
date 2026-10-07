@@ -111,6 +111,7 @@ export default function Sidebar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isPWA, setIsPWA] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // Detect mobile and PWA
   useEffect(() => {
@@ -147,6 +148,22 @@ export default function Sidebar() {
     return () => { mounted = false; };
   }, []);
 
+  useEffect(() => {
+    function fetchUnread() {
+      fetch("/api/conversations?limit=50")
+        .then((r) => r.ok ? r.json() : null)
+        .then((d) => {
+          if (!d) return;
+          const total = (d.conversations ?? []).reduce((acc: number, c: { unreadCount: number }) => acc + c.unreadCount, 0);
+          setUnreadCount(total);
+        })
+        .catch(() => {});
+    }
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
   async function confirmLogout() {
     setLoggingOut(true);
     await fetch("/api/auth/logout", { method: "POST" });
@@ -171,6 +188,7 @@ export default function Sidebar() {
       <div className="space-y-0.5">
         {nav.map((item) => {
           const active = isActive(item.href, item.exact);
+          const isInbox = item.href === "/dashboard/inbox";
           return (
             <Link
               key={item.href}
@@ -181,8 +199,20 @@ export default function Sidebar() {
                 color: active ? "var(--sidebar-text-active)" : "var(--sidebar-text)",
               }}
             >
-              <span className="shrink-0">{item.icon}</span>
-              <span className="hidden lg:block">{item.label}</span>
+              <span className="shrink-0 relative">
+                {item.icon}
+                {isInbox && unreadCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-0.5 rounded-full text-[10px] font-bold text-white flex items-center justify-center" style={{ background: "#dc2626" }}>
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </span>
+              <span className="hidden lg:block flex-1">{item.label}</span>
+              {isInbox && unreadCount > 0 && (
+                <span className="hidden lg:flex ml-auto min-w-[20px] h-5 px-1 rounded-full text-xs font-bold text-white items-center justify-center" style={{ background: "#dc2626" }}>
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
             </Link>
           );
         })}
@@ -391,6 +421,7 @@ export default function Sidebar() {
       >
         {nav.slice(0, 5).map((item) => {
           const active = isActive(item.href, item.exact);
+          const isInbox = item.href === "/dashboard/inbox";
           return (
             <Link
               key={item.href}
@@ -398,7 +429,14 @@ export default function Sidebar() {
               className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-all"
               style={{ color: active ? "var(--accent)" : "var(--sidebar-text)" }}
             >
-              {item.icon}
+              <span className="relative">
+                {item.icon}
+                {isInbox && unreadCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-0.5 rounded-full text-[10px] font-bold text-white flex items-center justify-center" style={{ background: "#dc2626" }}>
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </span>
               <span className="text-xs font-medium">{item.label}</span>
             </Link>
           );
