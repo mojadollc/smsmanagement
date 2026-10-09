@@ -31,6 +31,14 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ customers, total, page, limit });
 }
 
+function normalizePhone(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  if (digits.length === 10) return `+1${digits}`;
+  if (digits.length === 11 && digits.startsWith("1")) return `+${digits}`;
+  if (digits.length > 11) return `+1${digits.slice(-10)}`;
+  return raw.startsWith("+") ? raw : `+${digits}`;
+}
+
 export async function POST(req: NextRequest) {
   const user = await requireAuth();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -42,8 +50,9 @@ export async function POST(req: NextRequest) {
     let imported = 0, skipped = 0;
     for (const row of body) {
       try {
+        const phone = normalizePhone(row.phone);
         await prisma.customer.create({
-          data: { orgId: user.orgId, firstName: row.firstName || "Unknown", lastName: row.lastName || row.phone, phone: row.phone, email: row.email || null },
+          data: { orgId: user.orgId, firstName: row.firstName || "Unknown", lastName: row.lastName || phone, phone, email: row.email || null },
         });
         imported++;
       } catch { skipped++; }
@@ -51,10 +60,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ imported, skipped });
   }
 
-  const { firstName, lastName, phone, email } = body;
-  if (!firstName || !lastName || !phone)
+  const { firstName, lastName, phone: rawPhone, email } = body;
+  if (!firstName || !lastName || !rawPhone)
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
 
+  const phone = normalizePhone(rawPhone);
   const existing = await prisma.customer.findUnique({ where: { orgId_phone: { orgId: user.orgId, phone } } });
   if (existing) return NextResponse.json({ error: "Phone number already exists" }, { status: 409 });
 

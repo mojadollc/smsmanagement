@@ -63,30 +63,95 @@ export default function CustomerList() {
     }
   }
 
+  // Extract a 10-digit US/CA phone number from any string and return E.164 format
+  function extractPhone(raw: string): string {
+    const digits = raw.replace(/\D/g, "");
+    if (digits.length === 10) return `+1${digits}`;
+    if (digits.length === 11 && digits.startsWith("1")) return `+${digits}`;
+    if (digits.length > 10) {
+      // Try to grab last 10 digits as a fallback
+      const last10 = digits.slice(-10);
+      return `+1${last10}`;
+    }
+    return "";
+  }
+
+  // Strip the phone digits out of a string to get the name portion
+  function extractName(raw: string, phone: string): string {
+    const digits = phone.replace(/\D/g, "");
+    // Remove the phone digits (last 10) from the raw string
+    const last10 = digits.slice(-10);
+    const name = raw.replace(last10, "").replace(/[^a-zA-Z\s&'.,-]/g, " ").trim().replace(/\s+/g, " ");
+    return name || "Unknown";
+  }
+
   function parseCSV(text: string) {
     setCsvError("");
     setImportResult(null);
     const lines = text.trim().split("\n").filter(Boolean);
-    if (lines.length < 2) { setCsvError("CSV must have a header row and at least one data row."); return; }
+    if (!lines.length) { setCsvError("No data found."); return; }
 
-    const headers = lines[0].split(",").map((h) => h.trim().toLowerCase().replace(/[^a-z]/g, ""));
-    const phoneIdx = headers.findIndex((h) => h.includes("phone") || h.includes("mobile") || h.includes("number"));
-    const firstIdx = headers.findIndex((h) => h.includes("first") || h === "firstname" || h === "name");
-    const lastIdx = headers.findIndex((h) => h.includes("last") || h === "lastname" || h === "surname");
-    const emailIdx = headers.findIndex((h) => h.includes("email"));
+    // Detect if first line looks like a header (no digits that form a phone number)
+    const firstLinePhone = extractPhone(lines[0]);
+    const hasHeader = !firstLinePhone || lines[0].toLowerCase().includes("phone") || lines[0].toLowerCase().includes("name");
+    const dataLines = hasHeader ? lines.slice(1) : lines;
 
-    if (phoneIdx === -1) { setCsvError("CSV must have a column named 'phone', 'mobile', or 'number'."); return; }
+    if (hasHeader && dataLines.length === 0) { setCsvError("No data rows found."); return; }
 
-    const rows = lines.slice(1).map((line) => {
-      const cols = line.split(",").map((c) => c.trim().replace(/^["']|["']$/g, ""));
-      const phone = cols[phoneIdx]?.replace(/\s/g, "") || "";
-      const firstName = firstIdx >= 0 ? cols[firstIdx] || "Unknown" : "Unknown";
-      const lastName = lastIdx >= 0 ? cols[lastIdx] || phone : phone;
-      const email = emailIdx >= 0 ? cols[emailIdx] || "" : "";
+    // Try to detect column structure from header
+    let phoneIdx = -1, firstIdx = -1, lastIdx = -1, emailIdx = -1;
+    if (hasHeader) {
+      const headers = lines[0].split(",").map((h) => h.trim().toLowerCase().replace(/[^a-z]/g, ""));
+      phoneIdx = headers.findIndex((h) => h.includes("phone") || h.includes("mobile") || h.includes("number"));
+      firstIdx = headers.findIndex((h) => h.includes("first") || h === "firstname");
+      lastIdx  = headers.findIndex((h) => h.includes("last")  || h === "lastname" || h === "surname");
+      emailIdx = headers.findIndex((h) => h.includes("email"));
+    }
+
+    const rows = dataLines.map((line) => {
+      // Split by comma but also handle tab-separated
+      const sep = line.includes("\t") ? "\t" : ",";
+      const cols = line.split(sep).map((c) => c.trim().replace(/^["']|["']$/g, "").replace(/&amp;/g, "&"));
+
+      let rawPhone = "";
+      let rawName  = "";
+      let email    = "";
+
+      if (phoneIdx >= 0) {
+        // Structured CSV with known columns
+        rawPhone = cols[phoneIdx] || "";
+        rawName  = firstIdx >= 0 ? `${cols[firstIdx] || ""} ${cols[lastIdx] ?? ""}`.trim() : (cols[0] || "");
+        email    = emailIdx >= 0 ? cols[emailIdx] || "" : "";
+      } else {
+        // Unstructured — scan each column for a phone number
+        for (const col of cols) {
+          const p = extractPhone(col);
+          if (p) { rawPhone = col; break; }
+        }
+        // Name = everything that isn't the phone column
+        rawName = cols.filter((c) => c !== rawPhone).join(" ").trim();
+        // If name still contains digits (e.g. "CleaningCo3053904977"), strip them
+        if (!rawPhone && cols.length === 1) {
+          rawPhone = cols[0];
+          rawName  = "";
+        }
+      }
+
+      const phone = extractPhone(rawPhone);
+
+      // If name still has the phone digits embedded (single-column mess), extract cleanly
+      const name = rawName && rawPhone === rawName
+        ? extractName(rawName, phone)
+        : rawName || extractName(rawPhone, phone);
+
+      const parts = name.split(" ").filter(Boolean);
+      const firstName = parts[0] || "Unknown";
+      const lastName  = parts.slice(1).join(" ") || phone;
+
       return { firstName, lastName, phone, email };
-    }).filter((r) => r.phone);
+    }).filter((r) => r.phone.startsWith("+"));
 
-    if (!rows.length) { setCsvError("No valid rows found."); return; }
+    if (!rows.length) { setCsvError("No valid phone numbers found. Make sure numbers are 10 or 11 digits (US/Canada)."); return; }
     setCsvRows(rows);
   }
 
@@ -244,9 +309,12 @@ export default function CustomerList() {
           </div>
 
           <div className="rounded-lg p-4" style={{ background: "var(--bg-subtle)" }}>
-            <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: "var(--text-3)" }}>Expected Format</p>
+            <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: "var(--text-3)" }}>Supported Formats</p>
             <code className="text-xs block" style={{ color: "var(--text-2)" }}>first_name,last_name,phone,email</code>
             <code className="text-xs block mt-1" style={{ color: "var(--text-3)" }}>John,Smith,+16041234567,john@example.com</code>
+            <code className="text-xs block mt-2" style={{ color: "var(--text-2)" }}>Business Name,phone (e.g. CleanCo,3053904977)</code>
+            <code className="text-xs block mt-1" style={{ color: "var(--text-3)" }}>Single column: CleaningCo3053904977</code>
+            <p className="text-xs mt-2" style={{ color: "var(--text-3)" }}>+1 is added automatically for 10-digit US/Canada numbers.</p>
           </div>
 
           <div>
@@ -260,7 +328,7 @@ export default function CustomerList() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
               </svg>
               <p className="text-sm font-medium" style={{ color: "var(--text)" }}>Click to upload</p>
-              <input ref={fileRef} type="file" accept=".csv,text/csv" className="hidden" onChange={handleFile} />
+              <input ref={fileRef} type="file" accept=".csv,.tsv,.txt,text/csv" className="hidden" onChange={handleFile} />
             </div>
           </div>
 
