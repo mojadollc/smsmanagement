@@ -54,6 +54,16 @@ export async function getPhoneNumbers() {
   return client.incomingPhoneNumbers.list();
 }
 
+export async function getAccountBalance(): Promise<{ balance: string; currency: string } | null> {
+  try {
+    const { client } = await getClient();
+    const bal = await (client as any).balance.fetch();
+    return { balance: bal.balance, currency: bal.currency };
+  } catch {
+    return null;
+  }
+}
+
 export async function validateWebhook(
   signature: string,
   url: string,
